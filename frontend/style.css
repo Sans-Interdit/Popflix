@@ -1,54 +1,23 @@
-/* ==========================================================================
-   POPFLIX — TABLE DES MATIÈRES (style.css)
+/* =============================================================================
+   0) IMPORTS & FONDATIONS
+   - Polices, variables CSS, reset minimal, base HTML
+   ============================================================================= */
 
-   0) Variables & fondations
-      - Palette (CSS variables), import des polices, reset minimal
+/* -- Polices (toujours tout en haut) ---------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap');
 
-   1) En-tête (Topbar)
-      - Barre supérieure, marque (logo + slogan)
-
-   2) Navigation principale
-      - Menu horizontal, état actif par page (body[data-page])
-
-   3) Barre de filtres & recherche
-      - Filtres (type/état), champ de recherche, titres de page
-
-   4) Grille / Listing
-      - Conteneur .grid qui aligne les cartes
-
-   5) Carte média
-      - Carte .carte, contenu .card (poster, texte, meta, synopsis)
-      - Badge .type (Film/Série), container d’alignement
-
-   6) Boutons (CTA)
-      - Styles des boutons d’action des cartes
-
-   7) Responsive
-      - Adaptations tablette & mobile (≤1000px, ≤600px)
-
-   Astuce VS Code:
-   - Tu peux ajouter des régions repliables autour de chaque section:
-       /*#region 3) Barre de filtres & recherche *\/
-       … styles …
-       /*#endregion *\/
-   ========================================================================== */
-
-/* ==========================================================================
-   0) Variables & fondations
-   - Palette, dégradés, et normalisations globales (reset léger)
-   ========================================================================== */
+/* -- Variables & thèmes ----------------------------------------------------- */
 :root {
   --bg:    linear-gradient(135deg, #0D1118 0%, #0a1229 100%); /* Fond principal */
-  --bg2:   linear-gradient(180deg, rgba(5, 29, 46, 0.95) 0%, #0a1229 100%); /* Fond secondaire (surfaces) */
+  --bg2:   linear-gradient(180deg, rgba(5, 29, 46, 0.95) 0%, #0a1229 100%); /* Surfaces */
   --text:  #e8f4fc;          /* Texte principal */
   --accent:#47a7eb;          /* Couleur d’accent (cta, focus, bordures actives) */
   --card:  #051d2e;          /* Fond des cartes (fallback/solide) */
+  --bg2-plain: #0a1229;      /* Version solide pour menus/options */
+  --accent-plain: #47a7eb;   /* Accent solide */
 }
 
-/* Polices */
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap');
-
-/* Reset minimal pour une base saine */
+/* -- Reset minimal & base --------------------------------------------------- */
 * { box-sizing: border-box; }
 
 html, body {
@@ -60,11 +29,11 @@ html, body {
 }
 
 
-
-/* ==========================================================================
-   1) En-tête (Topbar)
+/* =============================================================================
+   1) EN-TÊTE (TOPBAR)
    - Marque, slogan, logo
-   ========================================================================== */
+   ============================================================================= */
+
 .topbar {
   display: flex;
   align-items: center;
@@ -74,14 +43,14 @@ html, body {
   border-bottom: 1px solid var(--accent);
 }
 
-/* Bloc marque (POPFLIX + slogan) */
+/* -- Marque --------------------------------------------------------------- */
 .brand {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-/* Logotype "POPFLIX" */
+/* -- Logo texte / image --------------------------------------------------- */
 .logo {
   font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
@@ -102,11 +71,11 @@ html, body {
 }
 
 
+/* =============================================================================
+   2) NAVIGATION PRINCIPALE
+   - Menu horizontal + état actif contextualisé
+   ============================================================================= */
 
-/* ==========================================================================
-   2) Navigation principale
-   - Menu horizontal + état actif par page
-   ========================================================================== */
 .main-nav {
   display: flex;
   gap: 28px;
@@ -135,17 +104,17 @@ body[data-page="compte"]        .nav-item[href*="compte"] {
 }
 
 
-
-/* ==========================================================================
-   3) Barre de filtres & recherche
+/* =============================================================================
+   3) BARRE DE FILTRES & RECHERCHE
    - Filtres (type/état) + champ de recherche
-   ========================================================================== */
+   ============================================================================= */
+
 .filters {
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: var(--bg);
-  padding: 16px 5%;
+  padding: 16px 20px;
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -157,21 +126,20 @@ body[data-page="compte"]        .nav-item[href*="compte"] {
   flex-wrap: wrap;
 }
 
-/* Titre "Toute la bibliothèque", "MA WATCHLIST", etc. */
+/* Titre ("Toute la bibliothèque", etc.) */
 .filters h2 {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 30px;
+  font-size: 25px;
   background: var(--bg2);
   padding: 10px 18px;
   border-radius: 4px;
   border: 1px solid transparent;
   color: var(--text);
   letter-spacing: 3px;
-  margin: 0;
   flex-shrink: 0;
 }
 
-/* Boutons de filtre (type/état) */
+/* -- Bouton de filtre (étiquette) ---------------------------------------- */
 .filtre {
   background: var(--bg2);
   color: var(--text);
@@ -179,10 +147,13 @@ body[data-page="compte"]        .nav-item[href*="compte"] {
   font-size: 25px;
   letter-spacing: 1px;
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: 4px 0 0 4px;
   padding: 10px 16px;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
+  height: 46px;
+  display: flex;
+  align-items: center;
 }
 
 .filtre:hover,
@@ -191,40 +162,182 @@ body[data-page="compte"]        .nav-item[href*="compte"] {
   color: var(--bg);
 }
 
-/* Bloc recherche (label + input) */
-.recherche {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--bg2);
-  padding: 8px 10px;
-  border-radius: 4px;
-  border: 1px solid transparent;
+/* Variante "ghost" pour reset */
+.filtre--ghost { 
+  background: transparent; 
+  border-color: var(--accent); 
+  font-size: 0.85rem;          /* taille du texte réduite */
+  padding: 4px 10px; 
 }
 
-.recherche label {
+.filtre--ghost:hover { 
+  background: var(--accent); 
+  color: var(--bg); }
+
+/* -- Groupe filtre + select fusionné ------------------------------------- */
+.filter-group {
+  display: flex;
+  align-items: center;
+  position: relative;
+  flex-wrap: nowrap;
+  margin-right: 8px;
+}
+
+.filter-group select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: var(--bg2);           /* visuel fermé */
+  color: var(--text);
+  border: 1px solid transparent;
+  border-left: 1px solid var(--bg);
+  border-radius: 0 4px 4px 0;
+  padding: 10px 14px;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  height: 46px;
+  min-width: 180px;
+}
+
+.filter-group select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-plain);
+}
+
+/* Même fond au survol / focus */
+.filter-group select:hover,
+.filter-group select:focus {
+  background: var(--accent);
+  color: var(--bg);
+  outline: none;
+}
+
+/* -- Style interne du menu déroulant ------------------------------------- */
+select option {
+  background-color: var(--bg2-plain) !important;
+  color: var(--text) !important;
+}
+
+select option:hover,
+select option:checked,
+select option:active,
+select:focus option:checked {
+  background-color: var(--accent-plain) !important;
+  color: var(--bg) !important;
+}
+
+/* Chrome/Edge : retirer le highlight bleu */
+select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-plain);
+}
+
+/* Firefox : forcer l'apparence sombre de la popup */
+@supports (-moz-appearance:none) {
+  select {
+    -moz-appearance: none;
+    background-color: var(--bg2-plain);
+    color: var(--text);
+  }
+  select option:hover,
+  select option:checked {
+    background-color: var(--accent-plain) !important;
+    color: var(--bg) !important;
+  }
+}
+
+/* Champ combiné: label + input dans UN rectangle */
+.filter-field{
+  display:flex;
+  align-items:center;
+  background: var(--bg2);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  overflow: hidden;                /* arrondis propres */
+  height: 46px;
+}
+
+/* Le “TITRE” côté gauche */
+.filter-label{
   font-family: 'Bebas Neue', sans-serif;
   font-size: 25px;
-  color: var(--text);
   letter-spacing: 1px;
+  color: var(--text);
+  padding: 10px 14px;
+  border-right: 1px solid var(--bg);  /* petite séparation interne */
+  white-space: nowrap;
+}
+
+/* L’input prend toute la place restante, sans bord ni fond séparé */
+.filter-input{
+  flex: 1;
+  min-width: 220px;
+  padding: 10px 14px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+}
+
+/* Focus propre sur tout le bloc */
+.filter-field:focus-within{
+  box-shadow: 0 0 0 2px var(--accent-plain);
+}
+
+/* Placeholder lisible */
+.filter-input::placeholder{
+  color: rgba(232,244,252,.7);
+}
+
+/* Harmonisation au survol */
+.filter-field:hover{
+  border-color: rgba(255,255,255,.15);
+}
+
+/* Optionnel: resserrer le groupe */
+.filter-group{
+  gap: 8px; /* espace entre le champ combiné et le bouton reset */
 }
 
 /* Champ texte */
 .input {
   background: var(--bg2);
-  border: 1px solid transparent; /* fix: évite la valeur invalide var(bg2) */
+  border: 1px solid transparent; /* évite la valeur invalide */
   color: var(--text);
   padding: 6px 8px;
   font-family: 'Roboto', sans-serif;
   font-size: 14px;
 }
 
+.recherche .filtre { border-radius: 4px 0 0 4px; }
+
+.recherche .input {
+  background: var(--bg2);
+  color: var(--text);
+  border: 1px solid transparent;
+  border-left: 1px solid var(--bg);
+  border-radius: 0 4px 4px 0;
+  padding: 10px 14px;
+  height: 46px;
+  font-size: 16px;
+}
+
+.recherche .input:focus {
+  outline: none;
+  background: var(--accent);
+  color: var(--bg);
+}
 
 
-/* ==========================================================================
-   4) Grille / Listing
-   - Conteneur des cartes de contenus
-   ========================================================================== */
+/* =============================================================================
+   4) GRILLE / LISTING
+   - Conteneur des cartes
+   ============================================================================= */
+
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -234,11 +347,11 @@ body[data-page="compte"]        .nav-item[href*="compte"] {
 }
 
 
+/* =============================================================================
+   5) CARTE MÉDIA
+   - Poster, métadonnées, actions
+   ============================================================================= */
 
-/* ==========================================================================
-   5) Carte média
-   - Carte complète (poster + infos + actions)
-   ========================================================================== */
 /* Conteneur de carte */
 .carte {
   background: var(--bg2);
@@ -267,7 +380,7 @@ body[data-page="compte"]        .nav-item[href*="compte"] {
   width: 100%;
 }
 
-/* Poster (à gauche) */
+/* Poster */
 .poster {
   aspect-ratio: 2/3;
   flex: 0 0 120px;
@@ -289,10 +402,7 @@ body[data-page="compte"]        .nav-item[href*="compte"] {
 }
 
 /* Corps texte */
-.card-body {
-  width: 100%;
-  text-align: left;
-}
+.card-body { width: 100%; text-align: left; }
 
 .card h3 {
   margin: 0 0 6px;
@@ -330,8 +440,8 @@ body[data-page="compte"]        .nav-item[href*="compte"] {
   overflow: visible;
 }
 
-/* Badges / petites infos à droite (type Film/Série) */
-.container {               /* conteneur d’alignement */
+/* Badges / petites infos à droite */
+.container {
   display: flex;
   justify-content: flex-end;
 }
@@ -346,12 +456,31 @@ body[data-page="compte"]        .nav-item[href*="compte"] {
   font-family: 'Roboto', sans-serif;
 }
 
+.boutons {
+  display: flex;
+  gap: 30px; /* espace horizontal entre les boutons */
+  justify-content: center; /* centre les boutons si tu veux */
+  flex-wrap: wrap; /* permet le passage à la ligne sur mobile */
+}
 
 
-/* ==========================================================================
-   6) Boutons (CTA)
-   - Styles pour les actions des cartes
-   ========================================================================== */
+/* État persistant "ajouté" */
+.is-added,
+.btn-watchlist.is-added,
+.btn-wishlist.is-added {
+  background-color: #28a745;
+  color: #fff;
+  border-color: #28a745;
+  font-weight: 600;
+  transition: all .3s ease;
+}
+
+
+/* =============================================================================
+   6) BOUTONS (CTA)
+   - Actions principales
+   ============================================================================= */
+
 .btn {
   margin-top: 14px;
   padding: 10px 20px;
@@ -369,11 +498,39 @@ body[data-page="compte"]        .nav-item[href*="compte"] {
 .btn:active { transform: translateY(1px); }
 
 
+/* =============================================================================
+   7) BOUTON "RETOUR EN HAUT"
+   - Apparence + hover
+   ============================================================================= */
 
-/* ==========================================================================
-   7) Responsive
-   - Adaptations pour tablettes et mobiles
-   ========================================================================== */
+#backToTop {
+  display: none; /* caché par défaut (affiché en JS) */
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 99;
+  font-size: 20px;
+  border: none;
+  outline: none;
+  background: var(--accent); /* fond dynamique */
+  color: var(--bg);          /* texte dynamique */
+  cursor: pointer;
+  padding: 12px 18px;
+  border-radius: 8px;
+  transition: opacity 0.3s, transform 0.3s, background-color 0.3s;
+}
+
+#backToTop:hover {
+  background: color-mix(in srgb, var(--accent) 80%, white 20%); /* éclaircit */
+  transform: scale(1.1);
+}
+
+
+/* =============================================================================
+   8) RESPONSIVE
+   - Tablettes & mobiles
+   ============================================================================= */
+
 @media (max-width: 1000px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);
@@ -382,12 +539,138 @@ body[data-page="compte"]        .nav-item[href*="compte"] {
 }
 
 @media (max-width: 600px) {
-  .grid {
-    grid-template-columns: 1fr;
-    gap: 28px;
-  }
-
+  .grid { grid-template-columns: 1fr; gap: 28px; }
   .logo { font-size: 40px; }
   .slogan { font-size: 18px; }
   .nav-item { font-size: 20px; }
+}
+
+/* =============================================================================
+   9) PAGE COMPTE — Auth
+   ============================================================================= */
+
+.account {
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+  padding: 40px 16px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 520px;
+  background: var(--bg2);
+  border: 1px solid #1b4258;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+
+.auth-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.auth-header h1 {
+  margin: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  letter-spacing: 1px;
+}
+
+/* Formulaire */
+.auth-form { display: grid; gap: 14px; }
+
+.field { display: grid; gap: 6px; }
+
+.field label {
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  color: #cfe5f7;
+}
+
+.field input {
+  background: var(--bg2);
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-family: 'Roboto', sans-serif;
+  font-size: 15px;
+}
+
+.field input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-plain);
+  border-color: transparent;
+  background: var(--bg2);
+}
+
+
+/* Bouton principal */
+.auth-submit {
+  width: 100%;
+  padding: 12px 18px;
+  font-size: 16px;
+}
+
+/* Lien "mot de passe oublié" */
+.link-row {
+  text-align: center;
+  margin: 6px 0 0;
+}
+
+.text-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+}
+.text-link:hover { text-decoration: underline; }
+
+/* Bouton S'inscrire : version "ghost" déjà dans ton CSS, on s'assure du rendu */
+.btn--ghost {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.25);
+  color: var(--text);
+}
+.btn--ghost:hover { background: var(--accent); color: var(--bg); }
+
+/* Placement du bouton S'inscrire :
+   - Desktop : en haut à droite (header)
+   - Mobile : sous le formulaire (alt-action) */
+.signup-desktop { display: inline-flex; }
+.alt-action {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 4px;
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  color: rgba(232,244,252,.85);
+  background-color: var(--bg);
+}
+
+@media (max-width: 600px) {
+  .signup-desktop { display: none; }
+  .alt-action { display: flex; }
+}
+
+/* Bouton accent plein pour "S'inscrire" */
+.btn--accent {
+  background: var(--accent);
+  color: var(--bg);
+  border: 0;
+}
+
+.btn--accent:hover {
+  background: color-mix(in srgb, var(--accent) 85%, white 15%);
+}
+
+.btn--accent:active {
+  transform: translateY(1px);
 }

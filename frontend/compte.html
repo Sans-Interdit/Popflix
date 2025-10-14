@@ -3,32 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>POPFLIX — Toute la bibliothèque</title>
+  <title>POPFLIX — Mon compte</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="style.css">
 </head>
-<script>
-  (function () {
-    var file = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
-    var normalized = (file === 'index.html') ? 'bibliotheque.html' : file;
-    var links = document.querySelectorAll('.main-nav .nav-item');
-    for (var i = 0; i < links.length; i++) {
-      var a = links[i];
-      var link = document.createElement('a');
-      link.href = a.getAttribute('href');
-      var hrefFile = link.pathname.split('/').pop().toLowerCase();
-      if (hrefFile === normalized) {
-        a.classList.add('active');
-        a.setAttribute('aria-current', 'page');
-      } else {
-        a.classList.remove('active');
-        a.removeAttribute('aria-current');
-      }
-    }
-  })();
-</script>
-<body>
-
+<body data-page="compte">
   <!-- Top bar -->
   <header class="topbar">
     <div class="brand">
@@ -36,15 +20,51 @@
         <span>POPFLIX</span>
         <img src="/data/images/logo_popflix.png" alt="Logo POPFLIX" class="logo-img">
       </div>
-
       <div class="slogan">LE POPCORN DU BINGE-WATCH</div>
     </div>
 
     <nav class="main-nav" aria-label="Menu principal">
-    <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
-    <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
-    <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHEQUE</a>
-    <a class="nav-item" href="compte.html">MON COMPTE</a>
+      <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
+      <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
+      <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHÈQUE</a>
+      <a class="nav-item" href="compte.html">MON COMPTE</a>
     </nav>
   </header>
+
+<main class="account" role="main">
+  <section class="auth-card" aria-labelledby="authTitle">
+    <header class="auth-header">
+      <h1 id="authTitle">Mon compte</h1>
+      <!-- S'inscrire (desktop) : accent -->
+      <a class="btn btn--accent signup-desktop" href="inscription.html">S’inscrire</a>
+    </header>
+
+    <form class="auth-form" action="/login" method="post" novalidate>
+      <div class="field">
+        <label for="login">Nom d’utilisateur ou e-mail</label>
+        <input id="login" name="login" type="text" autocomplete="username" required>
+      </div>
+
+      <div class="field">
+        <label for="password">Mot de passe</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+
+      <button class="btn auth-submit" type="submit">Valider</button>
+
+      <p class="link-row">
+        <a class="text-link" href="mot-de-passe-oublie.html">Mot de passe oublié&nbsp;?</a>
+      </p>
+
+      <!-- S'inscrire (mobile) -->
+      <div class="alt-action">
+        <span>Pas encore de compte&nbsp;?</span>
+        <a class="btn btn--accent" href="inscription.html">S’inscrire</a>
+      </div>
+    </form>
+  </section>
+</main>
+
+
 </body>
+</html>
