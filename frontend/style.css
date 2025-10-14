@@ -1,89 +1,148 @@
-:root{
-  --bg: #0D1118; /* fond principal */
-  --bg2: #0a1229;  /* fond secondaire */
-  --text: #e8f4fc;  /* couleur du texte */
-  --accent: #47a7eb;  /* boutons et survols */
-  --card:#051d2e;  /* fond des cartes */
+/* ==========================================================================
+   POPFLIX — TABLE DES MATIÈRES (style.css)
+
+   0) Variables & fondations
+      - Palette (CSS variables), import des polices, reset minimal
+
+   1) En-tête (Topbar)
+      - Barre supérieure, marque (logo + slogan)
+
+   2) Navigation principale
+      - Menu horizontal, état actif par page (body[data-page])
+
+   3) Barre de filtres & recherche
+      - Filtres (type/état), champ de recherche, titres de page
+
+   4) Grille / Listing
+      - Conteneur .grid qui aligne les cartes
+
+   5) Carte média
+      - Carte .carte, contenu .card (poster, texte, meta, synopsis)
+      - Badge .type (Film/Série), container d’alignement
+
+   6) Boutons (CTA)
+      - Styles des boutons d’action des cartes
+
+   7) Responsive
+      - Adaptations tablette & mobile (≤1000px, ≤600px)
+
+   Astuce VS Code:
+   - Tu peux ajouter des régions repliables autour de chaque section:
+       /*#region 3) Barre de filtres & recherche *\/
+       … styles …
+       /*#endregion *\/
+   ========================================================================== */
+
+/* ==========================================================================
+   0) Variables & fondations
+   - Palette, dégradés, et normalisations globales (reset léger)
+   ========================================================================== */
+:root {
+  --bg:    linear-gradient(135deg, #0D1118 0%, #0a1229 100%); /* Fond principal */
+  --bg2:   linear-gradient(180deg, rgba(5, 29, 46, 0.95) 0%, #0a1229 100%); /* Fond secondaire (surfaces) */
+  --text:  #e8f4fc;          /* Texte principal */
+  --accent:#47a7eb;          /* Couleur d’accent (cta, focus, bordures actives) */
+  --card:  #051d2e;          /* Fond des cartes (fallback/solide) */
 }
 
 /* Polices */
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap');
 
-*{box-sizing:border-box}
+/* Reset minimal pour une base saine */
+* { box-sizing: border-box; }
 
-/* Base */
-html,body{
-    margin:0;
-    padding:0;
-    background:var(--bg);
-    color:var(--text);
-    font-family: 'Bebas Neue', 'Roboto', Arial, sans-serif;
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Bebas Neue', 'Roboto', Arial, sans-serif;
 }
 
-/* Header */
-.topbar{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  background:var(--bg2);
-  padding:16px 20px;
-  border-bottom:1px solid var(--accent);
+
+
+/* ==========================================================================
+   1) En-tête (Topbar)
+   - Marque, slogan, logo
+   ========================================================================== */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg2);
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--accent);
 }
 
-/* Popflix et slogan */
-.brand{
-    display:flex;
-    flex-direction:column;
-    gap:2px;
+/* Bloc marque (POPFLIX + slogan) */
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.logo{
-    font-family:'Bebas Neue', sans-serif;     
-    font-weight:800;                   
-    font-size:50px;                       
-    letter-spacing:2px;                        
-    color:var(--accent);                     
+/* Logotype "POPFLIX" */
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-weight: 800;
+  font-size: 50px;
+  letter-spacing: 2px;
+  color: var(--accent);
 }
 
-.logo-img{
-    height: 80px;
+.logo-img {
+  height: 80px;
   width: auto;
 }
 
-.slogan{
-    font-size:22px;
-    color:var(--accent);
-    letter-spacing:.5px;
+.slogan {
+  font-size: 22px;
+  color: var(--accent);
+  letter-spacing: .5px;
 }
 
-/* Navigation */
-.main-nav{
-    display:flex;
-    gap:28px;
-    align-items:center;
+
+
+/* ==========================================================================
+   2) Navigation principale
+   - Menu horizontal + état actif par page
+   ========================================================================== */
+.main-nav {
+  display: flex;
+  gap: 28px;
+  align-items: center;
 }
 
-.nav-item{
-  color:var(--text);
-  text-decoration:none;
-  font-weight:700;
-  font-size:22px;
+/* Liens du menu */
+.nav-item {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 22px;
   letter-spacing: 2px;
+  transition: opacity .15s ease-in-out;
 }
 
-.nav-item:hover{
-    opacity:1;
+.nav-item:hover { opacity: .9; }
+
+/* Actif selon la page (via body[data-page]) */
+body[data-page="watchlist"]     .nav-item[href*="watchlist"],
+body[data-page="wishlist"]      .nav-item[href*="wishlist"],
+body[data-page="bibliotheque"]  .nav-item[href*="bibliotheque"],
+body[data-page="compte"]        .nav-item[href*="compte"] {
+  border-bottom: 3px solid var(--accent);
+  padding-bottom: 6px;
 }
 
-.nav-item.active{
-    border-bottom:3px solid var(--accent);
-    padding-bottom:6px;
-}
 
-/* Filtres et Recherche */
+
+/* ==========================================================================
+   3) Barre de filtres & recherche
+   - Filtres (type/état) + champ de recherche
+   ========================================================================== */
 .filters {
   display: flex;
-  justify-content: space-between;  
+  justify-content: space-between;
   align-items: center;
   background: var(--bg);
   padding: 16px 5%;
@@ -94,30 +153,32 @@ html,body{
 .filters-right {
   display: flex;
   align-items: center;
-  gap: 14px; 
+  gap: 14px;
   flex-wrap: wrap;
 }
 
+/* Titre "Toute la bibliothèque", "MA WATCHLIST", etc. */
 .filters h2 {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 30px;
   background: var(--bg2);
   padding: 10px 18px;
   border-radius: 4px;
-  border: 1px solid var(--bg2);
+  border: 1px solid transparent;
   color: var(--text);
   letter-spacing: 3px;
-  margin: 0; 
+  margin: 0;
   flex-shrink: 0;
 }
 
+/* Boutons de filtre (type/état) */
 .filtre {
   background: var(--bg2);
   color: var(--text);
   font-family: 'Bebas Neue', sans-serif;
   font-size: 25px;
   letter-spacing: 1px;
-  border: 1px solid var(--bg2);
+  border: 1px solid transparent;
   border-radius: 4px;
   padding: 10px 16px;
   cursor: pointer;
@@ -128,10 +189,9 @@ html,body{
 .filtre.active {
   background: var(--accent);
   color: var(--bg);
-  border-color: var(--bg2);
 }
 
-/* Bloc de recherche */
+/* Bloc recherche (label + input) */
 .recherche {
   display: flex;
   align-items: center;
@@ -139,7 +199,7 @@ html,body{
   background: var(--bg2);
   padding: 8px 10px;
   border-radius: 4px;
-  border: 1px solid var(--bg2);
+  border: 1px solid transparent;
 }
 
 .recherche label {
@@ -149,17 +209,23 @@ html,body{
   letter-spacing: 1px;
 }
 
+/* Champ texte */
 .input {
   background: var(--bg2);
-  border: var(bg2);
+  border: 1px solid transparent; /* fix: évite la valeur invalide var(bg2) */
   color: var(--text);
   padding: 6px 8px;
   font-family: 'Roboto', sans-serif;
   font-size: 14px;
 }
 
-/* Grille des Cartes */
-.cards-grid {
+
+
+/* ==========================================================================
+   4) Grille / Listing
+   - Conteneur des cartes de contenus
+   ========================================================================== */
+.grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 60px 50px;
@@ -167,7 +233,13 @@ html,body{
   justify-items: center;
 }
 
-/* === Carte complète (affiche + texte + bouton séparé) === */
+
+
+/* ==========================================================================
+   5) Carte média
+   - Carte complète (poster + infos + actions)
+   ========================================================================== */
+/* Conteneur de carte */
 .carte {
   background: var(--bg2);
   border: 1px solid #1b4258;
@@ -175,18 +247,18 @@ html,body{
   padding: 16px;
   width: 100%;
   max-width: 420px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition: transform .2s ease, box-shadow .2s ease;
 }
 
 .carte:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .4);
 }
 
-/* === Contenu de la carte === */
+/* Ligne interne (poster + texte) */
 .card {
   display: flex;
   flex-direction: row;
@@ -195,8 +267,9 @@ html,body{
   width: 100%;
 }
 
-/* === Affiche à gauche === */
+/* Poster (à gauche) */
 .poster {
+  aspect-ratio: 2/3;
   flex: 0 0 120px;
   height: 180px;
   border-radius: 6px;
@@ -211,11 +284,11 @@ html,body{
 .poster-img {
   width: 100%;
   height: 100%;
-  object-fit: cover; 
+  object-fit: cover;
   display: block;
 }
 
-/* === Texte === */
+/* Corps texte */
 .card-body {
   width: 100%;
   text-align: left;
@@ -247,14 +320,38 @@ html,body{
 }
 
 .synopsis {
-    font-family: 'Roboto', sans-serif;
+  font-family: 'Roboto', sans-serif;
   font-size: 13px;
   color: #bcd1e3;
   padding: 6px 0;
   line-height: 1.4;
+  white-space: normal;
+  text-overflow: initial;
+  overflow: visible;
 }
 
-/* === Bouton centré sous la carte === */
+/* Badges / petites infos à droite (type Film/Série) */
+.container {               /* conteneur d’alignement */
+  display: flex;
+  justify-content: flex-end;
+}
+
+.type {
+  display: inline-block;
+  color: var(--text);
+  background-color: transparent;
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-family: 'Roboto', sans-serif;
+}
+
+
+
+/* ==========================================================================
+   6) Boutons (CTA)
+   - Styles pour les actions des cartes
+   ========================================================================== */
 .btn {
   margin-top: 14px;
   padding: 10px 20px;
@@ -264,39 +361,33 @@ html,body{
   background: var(--accent);
   color: var(--bg);
   font: 800 14px/1 'Bebas Neue', sans-serif;
-  letter-spacing: 0.6px;
+  letter-spacing: .6px;
+  transition: background-color .15s ease-in-out, transform .05s ease-in-out;
 }
 
-.btn:hover {
-  background: #3595d8;
-}
-
-.type {
-  display: inline-block;      
-  color: var(--text);             
-  background-color: transparent;   
-  border: 2px solid var(--accent);  
-  border-radius: 4px;          
-  padding: 4px 8px;      
-  font-family: 'Roboto', sans-serif;
-}
-
-.container {
-  display: flex;
-  justify-content: flex-end; /* pousse le contenu à droite */
-}
+.btn:hover  { background: #3595d8; }
+.btn:active { transform: translateY(1px); }
 
 
-/* === Responsive === */
+
+/* ==========================================================================
+   7) Responsive
+   - Adaptations pour tablettes et mobiles
+   ========================================================================== */
 @media (max-width: 1000px) {
-  .cards-grid {
+  .grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 40px;
   }
 }
 
 @media (max-width: 600px) {
-  .cards-grid {
+  .grid {
     grid-template-columns: 1fr;
+    gap: 28px;
   }
+
+  .logo { font-size: 40px; }
+  .slogan { font-size: 18px; }
+  .nav-item { font-size: 20px; }
 }

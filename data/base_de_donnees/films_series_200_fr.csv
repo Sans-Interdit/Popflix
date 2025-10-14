@@ -1,0 +1,201 @@
+id,title,poster,year,type,genre,synopsis
+f001,Le Parrain,,1972,Film,Crime,Le patriarche d’une famille mafieuse transmet son empire à son fils réticent.
+f002,"Le Parrain, 2ᵉ partie",,1974,Film,Crime,La montée en puissance des Corleone et l’héritage familial à travers les générations.
+f003,The Dark Knight : Le Chevalier noir,,2008,Film,Action,Batman affronte le Joker tandis que Gotham sombre dans le chaos.
+f004,Inception,,2010,Film,Science-fiction,Un voleur infiltre les rêves pour implanter une idée dans l’esprit d’une cible.
+f005,Pulp Fiction,,1994,Film,Crime,Des histoires de crime s’entrecroisent entre rédemption et absurdités à Los Angeles.
+f006,Fight Club,,1999,Film,Drame,Un insomniaque et un savonnier fondent un club de combat clandestin.
+f007,Forrest Gump,,1994,Film,Drame,Un homme simple traverse les grands moments de l’histoire américaine.
+f008,Matrix,,1999,Film,Science-fiction,Un hacker découvre que la réalité est une simulation contrôlée par des machines.
+f009,Interstellar,,2014,Film,Science-fiction,Des astronautes voyagent à travers un trou de ver pour sauver l’humanité.
+f010,Le Seigneur des anneaux : La Communauté de l’anneau,,2001,Film,Fantastique,Un hobbit entame une quête pour détruire un anneau maléfique.
+f011,Le Seigneur des anneaux : Les Deux Tours,,2002,Film,Fantastique,La Communauté se sépare tandis que la guerre ravage la Terre du Milieu.
+f012,Le Seigneur des anneaux : Le Retour du roi,,2003,Film,Fantastique,La bataille finale pour la Terre du Milieu et le destin de l’Anneau.
+f013,"Star Wars, épisode IV : Un nouvel espoir",,1977,Film,Science-fiction,Un fermier rejoint la Rébellion pour détruire une arme planétaire.
+f014,L’Empire contre-attaque,,1980,Film,Science-fiction,Les rebelles subissent des revers tandis que Luke affronte une sombre révélation.
+f015,Le Retour du Jedi,,1983,Film,Science-fiction,L’Alliance lance une ultime offensive contre l’Empire.
+f016,Star Wars : Le Réveil de la Force,,2015,Film,Science-fiction,Une récupératrice découvre sa destinée alors que la Force s’éveille.
+f017,Avengers: Infinity War,,2018,Film,Action,Les héros s’unissent pour empêcher Thanos de réunir les Pierres d’Infinité.
+f018,Avengers: Endgame,,2019,Film,Action,Les survivants tentent d’inverser le claquement de doigts de Thanos.
+f019,Iron Man,,2008,Film,Action,Un milliardaire crée une armure high-tech et devient un héros.
+f020,Black Panther,,2018,Film,Action,T’Challa revient au Wakanda pour protéger son royaume et son trône.
+f021,Titanic,,1997,Film,Romance,Deux amants se rencontrent à bord du paquebot voué au naufrage.
+f022,Avatar,,2009,Film,Science-fiction,Un marine sur Pandora s’éprend d’une Na’vi et remet sa mission en question.
+f023,Avatar : La Voie de l’eau,,2022,Film,Science-fiction,La famille Sully lutte pour survivre et protéger les océans de Pandora.
+f024,Jurassic Park,,1993,Film,Aventure,Des dinosaures recréés s’échappent d’un parc à thème.
+f025,Le Roi Lion,,1994,Film,Animation,Un lionceau doit accepter sa destinée de roi des Terres de la fierté.
+f026,Toy Story,,1995,Film,Animation,Des jouets vivants affrontent l’amitié et le changement.
+f027,Toy Story 3,,2010,Film,Animation,L’avenir des jouets bascule alors qu’Andy part à l’université.
+f028,Le Monde de Nemo,,2003,Film,Animation,Un poisson-clown timide traverse l’océan pour retrouver son fils.
+f029,Là-haut,,2009,Film,Animation,Un vieil homme fait voler sa maison pour réaliser un rêve.
+f030,Vice-versa,,2015,Film,Animation,Les émotions d’une fillette l’aident à grandir lors d’un déménagement.
+f031,Coco,,2017,Film,Animation,Un garçon visite le Pays des Morts pour percer les secrets de sa famille.
+f032,Le Voyage de Chihiro,,2001,Film,Animation,Une fillette pénètre un monde d’esprits pour sauver ses parents.
+f033,Parasite,,2019,Film,Thriller,"Une famille pauvre infiltre un foyer riche, avec des conséquences tragiques."
+f034,La La Land,,2016,Film,Comédie musicale,Une actrice et un musicien poursuivent leurs rêves à Los Angeles.
+f035,Whiplash,,2014,Film,Drame,Un batteur affronte un professeur impitoyable pour atteindre l’excellence.
+f036,Les Évadés,,1994,Film,Drame,Deux prisonniers nouent un lien et rêvent d’évasion.
+f037,Seven,,1995,Film,Thriller,Deux enquêteurs traquent un tueur inspiré des sept péchés capitaux.
+f038,Le Silence des agneaux,,1991,Film,Thriller,Une stagiaire du FBI sollicite Hannibal Lecter pour arrêter un tueur.
+f039,Il faut sauver le soldat Ryan,,1998,Film,Guerre,Des soldats risquent tout pour retrouver un parachutiste en Normandie.
+f040,La Liste de Schindler,,1993,Film,Historique,Un industriel sauve des Juifs pendant l’Holocauste.
+f041,Gladiator,,2000,Film,Action,Un général trahi cherche vengeance dans l’arène romaine.
+f042,Braveheart,,1995,Film,Historique,William Wallace mène la révolte pour la liberté de l’Écosse.
+f043,Les Infiltrés,,2006,Film,Crime,Un taupe et un infiltré s’affrontent dans une partie mortelle.
+f044,Les Affranchis,,1990,Film,Crime,Ascension et chute d’un associé de la mafia new-yorkaise.
+f045,La Ligne verte,,1999,Film,Drame,Un gardien du couloir de la mort rencontre un détenu au don étrange.
+f046,Usual Suspects,,1995,Film,Crime,Un braquage tourne autour de l’insaisissable Keyser Söze.
+f047,Terminator 2 : Le Jugement dernier,,1991,Film,Science-fiction,Un cyborg protège l’adolescent destiné à sauver l’humanité.
+f048,Alien,,1979,Film,Science-fiction,L’équipage d’un vaisseau affronte une créature extraterrestre mortelle.
+f049,Aliens : Le Retour,,1986,Film,Science-fiction,La survivante mène des marines dans un nid d’aliens.
+f050,Retour vers le futur,,1985,Film,Science-fiction,Un ado remonte le temps et compromet sa propre existence.
+f051,Les Aventuriers de l’arche perdue,,1981,Film,Aventure,Indiana Jones cherche une relique biblique avant les nazis.
+f052,Indiana Jones et la Dernière Croisade,,1989,Film,Aventure,Indy et son père partent à la quête du Graal.
+f053,Le Prestige,,2006,Film,Drame,Deux magiciens rivaux s’engagent dans une dangereuse surenchère.
+f054,Memento,,2000,Film,Thriller,Un homme amnésique traque l’assassin de sa femme.
+f055,Django Unchained,,2012,Film,Western,Un esclave affranchi s’allie à un chasseur de primes pour sauver sa femme.
+f056,Inglourious Basterds,,2009,Film,Guerre,Des soldats alliés complotent pour éliminer des dirigeants nazis.
+f057,Once Upon a Time… in Hollywood,,2019,Film,Drame,Un acteur et sa doublure traversent le Hollywood de 1969.
+f058,Le Loup de Wall Street,,2013,Film,Biopic,L’ascension et la chute d’un courtier dévoré par l’excès.
+f059,Mad Max: Fury Road,,2015,Film,Action,Une course-poursuite désertique s’engage contre un tyran.
+f060,The Social Network,,2010,Film,Biopic,La création de Facebook et les conflits qui s’ensuivent.
+f061,No Country for Old Men,,2007,Film,Thriller,Un chasseur trouve de l’argent et attire un tueur implacable.
+f062,There Will Be Blood,,2007,Film,Drame,L’ambition d’un pétrolier corrompt tout autour de lui.
+f063,Old Boy,,2003,Film,Thriller,Un homme cherche des réponses après des années de captivité.
+f064,La Cité de Dieu,,2002,Film,Crime,"Dans les favelas de Rio, des enfants deviennent gangsters."
+f065,Le Fabuleux Destin d’Amélie Poulain,,2001,Film,Romance,"À Paris, Amélie sème le bonheur autour d’elle."
+f066,Le Pianiste,,2002,Film,Historique,Un pianiste juif lutte pour survivre dans le ghetto de Varsovie.
+f067,Her,,2013,Film,Romance,Un homme solitaire tombe amoureux d’un système d’exploitation.
+f068,Blade Runner,,1982,Film,Science-fiction,Un policier traque des androïdes rebelles dans un futur néon.
+f069,Blade Runner 2049,,2017,Film,Science-fiction,Un nouveau blade runner découvre un secret menaçant la société.
+f070,Dune (2021),,2021,Film,Science-fiction,Une maison noble se bat pour l’épice sur une planète désertique.
+f071,The Grand Budapest Hotel,,2014,Film,Comédie,Un concierge et un lobby boy se retrouvent au cœur d’un casse.
+f072,Premier Contact,,2016,Film,Science-fiction,Une linguiste tente de communiquer avec des extraterrestres.
+f073,2001 : l’Odyssée de l’espace,,1968,Film,Science-fiction,Un voyage spatial interroge l’évolution et la conscience.
+f074,Orange mécanique,,1971,Film,Crime,Un délinquant subit un conditionnement controversé.
+f075,Will Hunting,,1997,Film,Drame,Un génie des maths affronte son passé et ses peurs.
+f076,The Truman Show,,1998,Film,Drame,Un homme découvre que sa vie entière est une émission télévisée.
+f077,Eternal Sunshine of the Spotless Mind,,2004,Film,Romance,Deux ex effacent leurs souvenirs avant de douter de leur choix.
+f078,The Big Lebowski,,1998,Film,Comédie,Le Duc se retrouve mêlé à un enlèvement et à un tapis litigieux.
+f079,Gatsby le Magnifique,,2013,Film,Drame,Un millionnaire mystérieux poursuit un amour perdu à l’ère du jazz.
+f080,Joker,,2019,Film,Drame,La descente d’un marginal qui devient le célèbre criminel de Gotham.
+f081,Batman Begins,,2005,Film,Action,Bruce Wayne devient le Chevalier noir pour combattre le crime.
+f082,Heat,,1995,Film,Crime,Un braqueur de génie affronte un flic tenace à Los Angeles.
+f083,Rocky,,1976,Film,Sport,Un boxeur outsider obtient une chance pour le titre mondial.
+f084,Raging Bull,,1980,Film,Biopic,La vie tourmentée du boxeur Jake LaMotta.
+f085,L’Exorciste,,1973,Film,Horreur,Des prêtres tentent de sauver une fillette possédée.
+f086,Les Dents de la mer,,1975,Film,Thriller,Une station balnéaire traque un grand requin blanc.
+f087,Shining,,1980,Film,Horreur,La folie gagne le gardien d’un hôtel isolé et hanté.
+f088,Vol au-dessus d’un nid de coucou,,1975,Film,Drame,Un patient rebelle défie une infirmière tyrannique.
+f089,Les Indestructibles,,2004,Film,Animation,Une famille de super-héros reprend du service.
+f090,Ratatouille,,2007,Film,Animation,"À Paris, un rat rêve de devenir chef cuisinier."
+f091,Monstres & Cie,,2001,Film,Animation,Des monstres découvrent que le rire surpasse les cris.
+f092,Shrek,,2001,Film,Animation,Un ogre part sauver une princesse avec un âne bavard.
+f093,The Breakfast Club,,1985,Film,Comédie,Cinq lycéens tissent des liens pendant une colle.
+f094,Stand by Me,,1986,Film,Drame,Des amis partent à la recherche du corps d’un garçon disparu.
+f095,Piège de cristal,,1988,Film,Action,Un flic affronte des terroristes dans une tour de L.A.
+f096,Mission: Impossible – Fallout,,2018,Film,Action,Ethan Hunt tente d’éviter une catastrophe mondiale.
+f097,Skyfall,,2012,Film,Action,Bond affronte un ennemi lié au passé de M.
+f098,Casino Royale,,2006,Film,Action,Bond obtient son statut 00 et affronte un financier machiavélique.
+f099,Les Gardiens de la Galaxie,,2014,Film,Action,Une équipe improbable sauve la galaxie en musique.
+f100,Spider-Man : New Generation,,2018,Film,Animation,Plusieurs Spider-Men s’allient à travers les dimensions.
+s001,Game of Thrones,,2011,Série,Fantasy,"Des maisons nobles se disputent le pouvoir, tandis qu’une menace surgit au nord."
+s002,Breaking Bad,,2008,Série,Crime,Un prof de chimie fabrique de la méthamphétamine pour assurer l’avenir des siens.
+s003,Better Call Saul,,2015,Série,Crime,Jimmy McGill devient peu à peu l’avocat Saul Goodman.
+s004,Les Soprano,,1999,Série,Crime,Un parrain du New Jersey jongle entre famille et affaires sanglantes.
+s005,Sur écoute,,2002,Série,Crime,Les institutions de Baltimore vues par policiers et criminels.
+s006,Friends,,1994,Série,Comédie,Six amis vivent amours et galères à New York.
+s007,The Office (US),,2005,Série,Comédie,Mockumentaire sur les employés de Dunder Mifflin.
+s008,Stranger Things,,2016,Série,Science-fiction,Des enfants affrontent des forces surnaturelles et un laboratoire secret.
+s009,The Crown,,2016,Série,Drame,Le règne d’Élisabeth II au fil des décennies.
+s010,The Mandalorian,,2019,Série,Science-fiction,Un chasseur de primes protège un enfant mystérieux.
+s011,The Last of Us,,2023,Série,Drame,Un contrebandier escorte une adolescente immunisée à travers l’Amérique.
+s012,House of the Dragon,,2022,Série,Fantasy,"La guerre civile Targaryen, près de 200 ans avant GoT."
+s013,Westworld,,2016,Série,Science-fiction,Un parc d’androïdes devient le théâtre d’une révolte.
+s014,True Detective,,2014,Série,Crime,Anthologie d’enquêtes sombres menées par des détectives tourmentés.
+s015,Sherlock,,2010,Série,Crime,Sherlock Holmes et le Dr Watson à l’ère moderne.
+s016,Black Mirror,,2011,Série,Science-fiction,Anthologie sur les dérives de la technologie.
+s017,Narcos,,2015,Série,Crime,Ascension et chute des barons de la drogue en Colombie.
+s018,La Casa de Papel,,2017,Série,Crime,Un cerveau orchestre des braquages contre les institutions espagnoles.
+s019,Dark,,2017,Série,Mystère,Une disparition révèle des liens temporels entre quatre familles.
+s020,The Witcher,,2019,Série,Fantasy,"Un sorceleur affronte monstres, politique et destin."
+s021,The Boys,,2019,Série,Action,Des justiciers s’attaquent à des super-héros corrompus par une multinationale.
+s022,The Umbrella Academy,,2019,Série,Fantasy,Des frères et sœurs dotés de pouvoirs tentent d’empêcher l’apocalypse.
+s023,Loki,,2021,Série,Science-fiction,Le dieu de la malice affronte le TVA et des lignes temporelles instables.
+s024,WandaVision,,2021,Série,Science-fiction,Une Avenger en deuil façonne une étrange sitcom de banlieue.
+s025,Daredevil,,2015,Série,Action,Un avocat aveugle combat le crime à Hell’s Kitchen.
+s026,Jessica Jones,,2015,Série,Drame,Une détective surpuissante affronte ses traumatismes.
+s027,The Punisher,,2017,Série,Action,Un justicier cherche la vérité sur le meurtre de sa famille.
+s028,Le Jeu de la dame,,2020,Série,Drame,Une prodige défie un milieu masculin pour régner aux échecs.
+s029,Chernobyl,,2019,Série,Historique,La catastrophe nucléaire de 1986 et ses conséquences humaines.
+s030,Frères d’armes,,2001,Série,Guerre,La Easy Company pendant la Seconde Guerre mondiale.
+s031,The Pacific,,2010,Série,Guerre,Des Marines combattent sur le théâtre du Pacifique.
+s032,Lost : Les Disparus,,2004,Série,Mystère,Des survivants de crash dévoilent les secrets d’une île.
+s033,Prison Break,,2005,Série,Thriller,Un homme échafaude une évasion pour sauver son frère.
+s034,The Walking Dead,,2010,Série,Horreur,Des survivants affrontent un monde ravagé par les zombies.
+s035,Fargo,,2014,Série,Crime,Anthologie de crimes absurdes dans le Midwest.
+s036,Succession,,2018,Série,Drame,Un empire médiatique s’entredéchire pour le pouvoir.
+s037,Severance,,2022,Série,Science-fiction,Des employés séparent souvenirs professionnels et personnels.
+s038,Mad Men,,2007,Série,Drame,Des publicitaires font face au changement dans les années 1960.
+s039,The Handmaid’s Tale,,2017,Série,Drame,Une femme résiste à une théocratie qui asservit les femmes.
+s040,The Bear,,2022,Série,Drame,Un chef reprend la sandwicherie familiale et affronte le chaos.
+s041,Fleabag,,2016,Série,Comédie,Une Londonienne caustique cherche un sens à sa vie.
+s042,Peaky Blinders,,2013,Série,Crime,Un gang impitoyable s’élève dans le Birmingham d’après-guerre.
+s043,Vikings,,2013,Série,Historique,Ragnar Lothbrok part en quête de gloire sur les mers.
+s044,The Leftovers,,2014,Série,Drame,La vie après la disparition inexpliquée de 2 % de l’humanité.
+s045,Mr. Robot,,2015,Série,Thriller,Un hacker lutte contre ses démons et le contrôle des corporations.
+s046,Homeland,,2011,Série,Thriller,Une agente de la CIA soupçonne un otage d’avoir basculé.
+s047,House of Cards,,2013,Série,Drame,Des politiciens ambitieux gravissent les échelons à Washington.
+s048,Ozark,,2017,Série,Crime,Une famille blanchit de l’argent pour un cartel dans les Ozarks.
+s049,Mindhunter,,2017,Série,Crime,Des agents profilent des tueurs en série pour comprendre leurs méthodes.
+s050,À la Maison-Blanche,,1999,Série,Drame,Dans les coulisses d’une administration présidentielle.
+s051,Parks and Recreation,,2009,Série,Comédie,Des agents publics gèrent des projets dans une petite ville.
+s052,Brooklyn Nine-Nine,,2013,Série,Comédie,Un détective farfelu résout des affaires avec son équipe.
+s053,How I Met Your Mother,,2005,Série,Comédie,Un père raconte la longue histoire de sa rencontre avec la mère.
+s054,The Big Bang Theory,,2007,Série,Comédie,Des colocataires geeks naviguent entre science et amour.
+s055,Modern Family,,2009,Série,Comédie,"Mockumentaire sur une famille de Los Angeles, diverse et attachante."
+s056,Ted Lasso,,2020,Série,Comédie,Un coach américain dirige une équipe de foot anglaise.
+s057,The Good Place,,2016,Série,Comédie,Une femme explore l’au-delà et la morale avec humour.
+s058,Better Things,,2016,Série,Comédie,Une mère célibataire jongle entre carrière d’actrice et enfants.
+s059,Atlanta,,2016,Série,Comédie,Deux cousins tentent de percer dans la scène rap d’Atlanta.
+s060,Barry,,2018,Série,Comédie,Un tueur à gages rêve de devenir acteur.
+s061,True Blood,,2008,Série,Fantasy,Les vampires vivent au grand jour parmi les humains.
+s062,Six Feet Under,,2001,Série,Drame,Une famille dirige un funérarium et fait face à la mort.
+s063,Rome,,2005,Série,Historique,Deux soldats assistent à la chute de la République romaine.
+s064,Boardwalk Empire,,2010,Série,Crime,Un magnat d’Atlantic City règne durant la Prohibition.
+s065,Sons of Anarchy,,2008,Série,Crime,Un club de bikers balance entre crime et famille.
+s066,X-Files : Aux frontières du réel,,1993,Série,Science-fiction,Deux agents enquêtent sur le paranormal et les complots.
+s067,Doctor Who,,2005,Série,Science-fiction,Un extraterrestre voyage dans le temps avec ses compagnons.
+s068,Star Trek : La Nouvelle Génération,,1987,Série,Science-fiction,Le capitaine Picard explore la galaxie à bord de l’Enterprise.
+s069,Star Trek : Picard,,2020,Série,Science-fiction,Jean-Luc Picard reprend du service pour de nouvelles missions.
+s070,Star Trek : Discovery,,2017,Série,Science-fiction,Une officier de Starfleet se retrouve au centre d’événements galactiques.
+s071,Battlestar Galactica,,2004,Série,Science-fiction,L’humanité fuit les Cylons à la recherche de la Terre.
+s072,The Expanse,,2015,Série,Science-fiction,Un complot menace la fragile paix du système solaire.
+s073,Firefly,,2002,Série,Science-fiction,Un équipage hétéroclite survit aux marges de l’espace.
+s074,Fringe,,2008,Série,Science-fiction,Des agents explorent la science de l’extrême et les univers parallèles.
+s075,Hannibal,,2013,Série,Thriller,Un profiler s’allie à un psychiatre brillant… et monstrueux.
+s076,Dexter,,2006,Série,Crime,Un expert médico-légal mène une double vie de tueur.
+s077,Supernatural,,2005,Série,Fantasy,"Deux frères chassent monstres, démons et dieux."
+s078,Arrow,,2012,Série,Action,Un milliardaire combat le crime armé d’un arc.
+s079,The Flash,,2014,Série,Action,Un scientifique devient l’homme le plus rapide du monde.
+s080,Smallville,,2001,Série,Drame,Clark Kent avance vers son destin avant Superman.
+s081,Dr House,,2004,Série,Drame,Un médecin brillant et abrasif résout des cas mystérieux.
+s082,Grey’s Anatomy,,2005,Série,Drame,Des chirurgiens jonglent entre bloc opératoire et vies privées.
+s083,Urgences,,1994,Série,Drame,Le quotidien effréné du personnel d’un hôpital de Chicago.
+s084,Scrubs,,2001,Série,Comédie,De jeunes médecins apprennent la vie à Sacred Heart.
+s085,24 heures chrono,,2001,Série,Thriller,Jack Bauer lutte contre la montre pour déjouer des menaces.
+s086,Les Experts (CSI),,2000,Série,Crime,Des experts médico-légaux résolvent des affaires à Las Vegas.
+s087,NCIS : Enquêtes spéciales,,2003,Série,Crime,Une équipe enquête sur des crimes touchant la Navy et les Marines.
+s088,"New York, unité spéciale",,1999,Série,Crime,Des inspecteurs traitent des affaires délicates d’agressions sexuelles.
+s089,Top Gear,,2002,Série,Télé-réalité,"Voitures, défis et humour avec des animateurs charismatiques."
+s090,Planète Terre,,2006,Série,Documentaire,Une exploration des merveilles naturelles de la planète.
+s091,Planète bleue,,2001,Série,Documentaire,Les secrets et la beauté des océans du monde.
+s092,Cosmos : Une odyssée à travers l’univers,,2014,Série,Documentaire,Un voyage à travers l’univers et les découvertes humaines.
+s093,Rick et Morty,,2013,Série,Animation,Un savant fou entraîne son petit-fils dans des aventures cosmiques.
+s094,BoJack Horseman,,2014,Série,Animation,Une ex-star de sitcom affronte la célébrité et l’autodestruction.
+s095,"Avatar, le dernier maître de l’air",,2005,Série,Animation,Un jeune Avatar doit maîtriser les éléments pour rétablir la paix.
+s096,La Légende de Korra,,2012,Série,Animation,La nouvelle Avatar affronte des crises politiques et spirituelles.
+s097,Fullmetal Alchemist: Brotherhood,,2009,Série,Animation,Deux frères cherchent la Pierre philosophale après un drame.
+s098,Death Note,,2006,Série,Animation,Un lycéen découvre un carnet capable de tuer.
+s099,L’Attaque des Titans,,2013,Série,Animation,L’humanité lutte contre des géants derrière d’immenses murs.
+s100,One Piece,,1999,Série,Animation,Un équipage de pirates cherche le légendaire trésor One Piece.

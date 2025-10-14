@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>POPFLIX — Toute la bibliothèque</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<script>
+  (function () {
+    var file = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+    var normalized = (file === 'index.html') ? 'bibliotheque.html' : file;
+    var links = document.querySelectorAll('.main-nav .nav-item');
+    for (var i = 0; i < links.length; i++) {
+      var a = links[i];
+      var link = document.createElement('a');
+      link.href = a.getAttribute('href');
+      var hrefFile = link.pathname.split('/').pop().toLowerCase();
+      if (hrefFile === normalized) {
+        a.classList.add('active');
+        a.setAttribute('aria-current', 'page');
+      } else {
+        a.classList.remove('active');
+        a.removeAttribute('aria-current');
+      }
+    }
+  })();
+</script>
+<body>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">
+        <span>POPFLIX</span>
+        <img src="/data/images/logo_popflix.png" alt="Logo POPFLIX" class="logo-img">
+      </div>
+
+      <div class="slogan">LE POPCORN DU BINGE-WATCH</div>
+    </div>
+
+    <nav class="main-nav" aria-label="Menu principal">
+    <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
+    <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
+    <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHEQUE</a>
+    <a class="nav-item" href="compte.html">MON COMPTE</a>
+    </nav>
+  </header>
+</body>

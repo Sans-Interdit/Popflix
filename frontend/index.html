@@ -3,12 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>POPFLIX — Ma Watchlist</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+  <title>POPFLIX — Accueil</title>
 
+  <!-- Polices -->
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Feuille de style -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body data-page="index">
   <!-- Top bar -->
   <header class="topbar">
     <div class="brand">
@@ -16,40 +20,58 @@
         <span>POPFLIX</span>
         <img src="/data/images/logo_popflix.png" alt="Logo POPFLIX" class="logo-img">
       </div>
-
       <div class="slogan">LE POPCORN DU BINGE-WATCH</div>
     </div>
 
-    <nav class="main-nav">
-      <a class="nav-item active" href="#" data-view="watchlist">MA WATCHLIST</a>
-      <a class="nav-item" href="#" data-view="wishlist">MA WISHLIST</a>
-      <a class="nav-item" href="#" data-view="search">RECHERCHER</a>
-      <a class="nav-item" href="#" data-view="account">MON COMPTE</a>
+    <!-- Navigation principale -->
+    <nav class="main-nav" aria-label="Menu principal">
+      <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
+      <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
+      <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHEQUE</a>
+      <a class="nav-item" href="compte.html">MON COMPTE</a>
     </nav>
   </header>
 
-  <!-- Filtres -->
-<section class="filters">
-  <h2>MA WATCHLIST</h2>
-  <div class="filters-right">
-    <button class="filtre active" data-type="series">SÉRIES</button>
-    <button class="filtre" data-type="films">FILMS</button>
-    <button class="filtre" data-state="started">COMMENCÉS</button>
-    <button class="filtre" data-state="done">TERMINÉS</button>
-    <div class="recherche">
-      <label for="q">TITRE :</label>
-      <input id="q" class="input" type="text" placeholder="Rechercher un titre…" />
-    </div>
-  </div>
-</section>
-
-
-  <!-- Cartes -->
-  <main class="content"></main>
-    <div id="cards" class="cards-grid">
-    </div>
+  <!-- Contenu principal -->
+  <main>
+    <section class="welcome">
+      <h1>Bienvenue sur <strong>POPFLIX</strong></h1>
+      <p>Découvrez, gérez et partagez vos séries et films favoris.</p>
+      <p><a href="bibliotheque.html" class="btn">Explorer la bibliothèque</a></p>
+    </section>
   </main>
 
-  <script src="logic.js"></script>
+  <!-- Script pour activer le bon lien de navigation -->
+  <script>
+    (function () {
+      // Récupère le nom du fichier courant (ex : "watchlist.html")
+      var file = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+
+      // Si on est sur index.html, on considère que la page logique est "bibliotheque.html"
+      var normalized = (file === 'index.html') ? 'bibliotheque.html' : file;
+
+      // Sélectionne tous les liens de la navigation principale
+      var links = document.querySelectorAll('.main-nav .nav-item');
+
+      // Parcourt chaque lien pour activer le bon
+      for (var i = 0; i < links.length; i++) {
+        var a = links[i];
+
+        // Récupère juste le nom de fichier du lien (sans chemin)
+        var link = document.createElement('a');
+        link.href = a.getAttribute('href');
+        var hrefFile = link.pathname.split('/').pop().toLowerCase();
+
+        // Si le lien correspond à la page actuelle
+        if (hrefFile === normalized) {
+          a.classList.add('active');
+          a.setAttribute('aria-current', 'page');
+        } else {
+          a.classList.remove('active');
+          a.removeAttribute('aria-current');
+        }
+      }
+    })();
+  </script>
 </body>
 </html>

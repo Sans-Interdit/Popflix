@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>POPFLIX — Toute la bibliothèque</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" defer></script>
+  <script src="/frontend/logic.js" defer></script>
+</head>
+
+<body data-page="bibliotheque">
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">
+        <span>POPFLIX</span>
+        <img src="/data/images/logo_popflix.png" alt="Logo POPFLIX" class="logo-img">
+      </div>
+      <div class="slogan">LE POPCORN DU BINGE-WATCH</div>
+    </div>
+
+    <nav class="main-nav" aria-label="Menu principal">
+      <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
+      <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
+      <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHÈQUE</a>
+      <a class="nav-item" href="compte.html">MON COMPTE</a>
+    </nav>
+  </header>
+
+  <!-- Filtres -->
+  <section class="filters">
+    <h2>Toute la bibliothèque</h2>
+    <div class="filters-right">
+      <button class="filtre" data-type="series">SÉRIES</button>
+      <button class="filtre" data-type="films">FILMS</button>
+      <button class="filtre" data-state="started">COMMENCÉS</button>
+      <button class="filtre" data-state="done">TERMINÉS</button>
+      <div class="recherche">
+        <label for="q">TITRE :</label>
+        <input id="q" class="input" type="text" placeholder="Rechercher un titre…" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Conteneur des cartes -->
+  <section id="catalog" class="grid"></section>
+
+  <!-- Scripts -->
+  <script>
+    // Met en surbrillance l'onglet actif (exécuté après le rendu)
+    (function highlightActiveNav() {
+      const file = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+      const normalized = (file === 'index.html') ? 'bibliotheque.html' : file;
+      document.querySelectorAll('.main-nav .nav-item').forEach(a => {
+        const tmp = document.createElement('a');
+        tmp.href = a.getAttribute('href');
+        const hrefFile = tmp.pathname.split('/').pop().toLowerCase();
+        if (hrefFile === normalized) {
+          a.classList.add('active');
+          a.setAttribute('aria-current', 'page');
+        } else {
+          a.classList.remove('active');
+          a.removeAttribute('aria-current');
+        }
+      });
+    })();
+
+    // Sauvegarde dans localStorage
+    function saveToList(listName, item) {
+      const list = JSON.parse(localStorage.getItem(listName)) || [];
+      const exists = list.some(i => (i.id && item.id && i.id === item.id) || i.title === item.title);
+      if (exists) return false;
+      list.push(item);
+      localStorage.setItem(listName, JSON.stringify(list));
+      return true;
+    }
+
+    // Extraction robuste depuis la CARTE RACINE (article.carte)
+    function extractItemFromCard(card) {
+      const qs = (sel) => card.querySelector(sel);
+      const getText = (sel) => qs(sel)?.textContent?.trim() || '';
+
+      const id =
+        card.dataset.id ||
+        card.getAttribute('data-id') ||
+        qs('[data-id]')?.dataset.id || '';
+
+      const title =
+        card.dataset.title ||
+        card.getAttribute('data-title') ||
+        qs('[data-title]')?.dataset.title ||
+        getText('.title, h3, h2') || '';
+
+      const image =
+        card.dataset.image ||
+        card.getAttribute('data-image') ||
+        qs('.poster-img, .poster img, img:not(.logo-img)')?.getAttribute('src') || '';
+
+      const type =
+        card.dataset.type ||
+        card.getAttribute('data-type') ||
+        (card.classList.contains('serie') ? 'serie'
+         : card.classList.contains('film') ? 'film' : '');
+
+      // META : essayer data-*, sinon déduire depuis le texte
+      const metaText = getText('.meta');
+
+      let annee =
+        card.dataset.annee ||
+        card.getAttribute('data-annee') ||
+        qs('[data-annee]')?.dataset.annee ||
+        getText('.annee, .year, .meta .year') ||
+        (card.textContent.match(/\b(18|19|20)\d{2}\b/) || [])[0] || '';
+
+      let genre =
+        card.dataset.genre ||
+        card.getAttribute('data-genre') || '';
+      if (!genre && metaText) {
+        genre = metaText.replace(/\b(18|19|20)\d{2}\b/g, '').replace(/\s+/g, ' ').trim();
+        if (genre === ',' || genre === '-') genre = '';
+      }
+
+      const synopsis =
+        card.dataset.synopsis ||
+        card.getAttribute('data-synopsis') ||
+        qs('[data-synopsis]')?.dataset.synopsis ||
+        card.dataset.synopsys || card.getAttribute('data-synopsys') ||
+        card.dataset.synopsi  || card.getAttribute('data-synopsi')  ||
+        getText('.synopsis, .resume, .overview') || '';
+
+      // Recoller en data-* (utile pour prochains clics)
+      if (title)    card.dataset.title    = title;
+      if (image)    card.dataset.image    = image;
+      if (type)     card.dataset.type     = type;
+      if (genre)    card.dataset.genre    = genre;
+      if (synopsis) card.dataset.synopsis = synopsis;
+      if (annee)    card.dataset.annee    = annee;
+
+      return { id, title, image, type, genre, synopsis, annee };
+    }
+
+    // Clics sur boutons (ajout watchlist / wishlist)
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#catalog')) return;
+
+      const el = e.target.closest('button');
+      if (!el) return;
+
+      const action = (el.dataset.action || '').toLowerCase();
+      const isWatchlist = el.classList.contains('add-watchlist') || el.classList.contains('btn-watchlist') || action === 'add-watchlist';
+      const isWishlist  = el.classList.contains('add-wishlist')  || el.classList.contains('btn-wishlist')  || action === 'add-wishlist';
+      if (!isWatchlist && !isWishlist) return;
+
+      e.preventDefault();
+
+      // Prendre la carte RACINE (article.carte / [data-card])
+      const cardRoot = el.closest('.carte, [data-card], article, .media-card, .item, .tile, li, div');
+      if (!cardRoot) return;
+
+      const item = extractItemFromCard(cardRoot);
+      if (!item.title && !item.id) return;
+
+      const listName = isWatchlist ? 'watchlist' : 'wishlist';
+      const added = saveToList(listName, item);
+
+      if (added) {
+        const original = el.textContent;
+        el.textContent = 'Ajouté ✓';
+        el.setAttribute('aria-live', 'polite');
+        setTimeout(() => { el.textContent = original; }, 1200);
+      }
+    });
+  </script>
+
+  <!-- Pied de page -->
+  <footer class="footer">
+    <p>
+      <img src="https://www.themoviedb.org/assets/2/v4/logos/stacked-blue-6da3c1d46e2e57e3b29cb07b2ad1bdf2ecb07dbcd2cf7b1dc7f013a81d6e99a6.svg"
+           alt="TMDb logo"
+           style="height: 30px; vertical-align: middle; margin-right: 8px;">
+      Ce produit utilise l’API de The Movie Database (TMDb), mais n’est ni approuvé ni certifié par TMDb.
+    </p>
+  </footer>
+</body>
+</html>

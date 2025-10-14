@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>POPFLIX — Ma Watchlist</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body data-page="watchlist">
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">
+        <span>POPFLIX</span>
+        <img src="/data/images/logo_popflix.png" alt="Logo POPFLIX" class="logo-img">
+      </div>
+      <div class="slogan">LE POPCORN DU BINGE-WATCH</div>
+    </div>
+    <nav class="main-nav" aria-label="Menu principal">
+      <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
+      <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
+      <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHÈQUE</a>
+      <a class="nav-item" href="compte.html">MON COMPTE</a>
+    </nav>
+  </header>
+
+  <!-- Filtres -->
+  <section class="filters">
+    <h2>MA WATCHLIST</h2>
+    <div class="filters-right">
+      <button class="filtre" data-type="series">SÉRIES</button>
+      <button class="filtre" data-type="films">FILMS</button>
+      <button class="filtre" data-state="started">COMMENCÉS</button>
+      <button class="filtre" data-state="done">TERMINÉS</button>
+      <div class="recherche">
+        <label for="q">TITRE :</label>
+        <input id="q" class="input" type="text" placeholder="Rechercher un titre…" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Conteneur des cartes -->
+  <section id="catalog" class="grid"></section>
+
+  <!-- ============ Scripts ============ -->
+  <!-- Mise en surbrillance de l’onglet actif -->
+  <script>
+    (function () {
+      const file = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+      const normalized = (file === 'index.html') ? 'bibliotheque.html' : file;
+      const links = document.querySelectorAll('.main-nav .nav-item');
+      links.forEach(a => {
+        const url = document.createElement('a');
+        url.href = a.getAttribute('href');
+        const hrefFile = url.pathname.split('/').pop().toLowerCase();
+        if (hrefFile === normalized) {
+          a.classList.add('active');
+          a.setAttribute('aria-current', 'page');
+        } else {
+          a.classList.remove('active');
+          a.removeAttribute('aria-current');
+        }
+      });
+    })();
+  </script>
+
+  <!-- Constructeur de carte homogène -->
+<script>
+  function buildCard(item, { showActions = false } = {}) {
+    const el = document.createElement('article');
+    el.className = 'carte';
+
+    // Attributs data-* pour que extractItemFromCard retrouve tout
+    el.setAttribute('data-id', item.id || '');
+    el.setAttribute('data-title', item.title || '');
+    el.setAttribute('data-image', item.image || '');
+    el.setAttribute('data-genre', item.genre || '');
+    el.setAttribute('data-synopsis', item.synopsis || '');
+    el.setAttribute('data-annee', item.annee || '');
+    if (item.type) {
+      el.setAttribute('data-type', item.type);  // 'film' | 'serie'
+      el.classList.add(item.type);
+    }
+
+    const title = item.title || 'Sans titre';
+    const poster = item.image || '';
+    const isSerie = item.type === 'serie';
+    const typeLabel = item.type ? (isSerie ? 'Série' : 'Film') : '';
+    const annee = item.annee || '';
+    const genre = item.genre || '';
+    const synopsis = item.synopsis || '';
+
+    el.innerHTML = `
+      <div class="card">
+        <div class="poster">
+          <img class="poster-img" src="${poster}" alt="${title}">
+        </div>
+
+        <div class="card-body">
+          <h3 class="title">${title}</h3>
+
+          <ul class="meta">
+            ${typeLabel ? `<li class="type">${typeLabel}</li>` : ''}
+            ${annee ? `<li class="year">${annee}</li>` : ''}
+            ${genre ? `<li class="genre">${genre}</li>` : ''}
+          </ul>
+
+          ${synopsis ? `
+            <div class="synopsis-label">Synopsis</div>
+            <p class="synopsis">${synopsis}</p>
+          ` : ''}
+        </div>
+      </div>
+
+      ${showActions ? `
+        <div class="actions">
+          <button class="btn add-watchlist" data-action="add-watchlist">Ajouter à ma watchlist</button>
+          <button class="btn add-wishlist" data-action="add-wishlist">Ajouter à ma wishlist</button>
+        </div>
+      ` : ''}
+    `;
+    return el;
+  }
+</script>
+
+
+  <!-- Lecture du localStorage et rendu -->
+  <script>
+    (function () {
+      const catalog = document.getElementById('catalog');
+      const list = JSON.parse(localStorage.getItem('watchlist')) || [];
+
+      if (!list.length) {
+        catalog.innerHTML = "<p>Aucun film ou série dans ta watchlist</p>";
+        return;
+      }
+
+      list.forEach(item => {
+        catalog.appendChild(buildCard(item, { showActions: false }));
+      });
+    })();
+  </script>
+</body>
+</html>
