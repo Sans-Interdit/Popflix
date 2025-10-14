@@ -22,8 +22,6 @@
     </header>
 
     <div class="content-wrapper">
-        <button class="return-btn">RETOUR A MA WATCHLIST</button>
-
         <div class="movie-container">
             <div class="poster-section">
                 <img src="https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg" alt="Poster" width="400" draggable="false">
@@ -31,36 +29,40 @@
 
             <div class="info-section">
                 <div class="info-item">
-                    <div class="info-label">Film</div>
+                    <div class="info-value" data-field="type">Film</div>
                 </div>
 
-                <h2>Inception</h2>
+                <h2 class="info-value" data-field="title">Inception</h2>
 
                 <div class="info-item">
                     <div class="info-label">Date de sortie :</div>
-                    <div class="info-value">2010-07-15</div>
+                    <div class="info-value" data-field="release_date">2010-07-15</div>
                 </div>
 
                 <div class="info-item">
                     <div class="info-label">Genres :</div>
-                    <div class="info-value">Action, Science Fiction, Adventure</div>
+                    <div class="info-value" data-field="genres">Action, Science Fiction, Adventure</div>
                 </div>
 
-                <div class="info-item">
+                <!-- <div class="info-item">
                     <div class="info-label">Distribution :</div>
                     <div class="distribution-text">Netflix</div>
-                </div>
+                </div> -->
 
                 <div class="info-item">
                     <div class="info-label">Synopsis :</div>
-                    <div class="synopsis-text">
+                    <div class="info-value" data-field="overview">
                         Cobb, un voleur qualifié qui commet un espionnage d'entreprise en infiltrant le subconscient de ses cibles se fait la possibilité de retrouver son ancienne vie de paiement d'une tâche considérée comme impossible: "Inception", l'implantation de l'idée d'une autre personne dans le subconscient d'une cible.
                     </div>
                 </div>
             </div>
             <div class="rating-section">
                 <button class="watched-btn">
-                    <span class="watched-text">NON VU</span>
+                    <span class="watched-text">J'ai vu cette œuvre</span>
+                </button>
+
+                <button class="wished-btn">
+                    <span class="wished-text">Ajouter à la wishlist</span>
                 </button>
 
                 <div>
@@ -76,7 +78,30 @@
                         <span class="star">★</span>
                     </div>                
                 </div>
+
+                <button class="return-btn">RETOUR A MA WATCHLIST</button>
             </div>
+            <!-- <div class="episodes-section">
+                <h2 class="full-row">Episode visionnées</h2>
+                <button class="watched-episode-btn">
+                    <span class="watched-episode-text">EPISODE 1</span>
+                </button>
+                <button class="watched-episode-btn">
+                    <span class="watched-episode-text">VU</span>
+                </button>
+                <button class="watched-episode-btn">
+                    <span class="watched-episode-text">VU</span>
+                </button>
+                <button class="watched-episode-btn">
+                    <span class="watched-episode-text">VU</span>
+                </button>
+                <button class="watched-episode-btn">
+                    <span class="watched-episode-text">VU</span>
+                </button>
+                <button class="watched-episode-btn">
+                    <span class="watched-episode-text">VU</span>
+                </button>
+            </div> -->
         </div>
     </div>
     <script src="carte.js"></script>

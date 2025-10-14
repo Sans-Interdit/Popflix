@@ -101,7 +101,6 @@ nav a:hover::after {
     text-transform: uppercase;
     letter-spacing: 2px;
     cursor: pointer;
-    margin-bottom: 40px;
     float: right;
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(71, 167, 235, 0.3);
@@ -151,6 +150,7 @@ nav a:hover::after {
 .info-section {
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     gap: 20px;
     padding: 20px;
     background: linear-gradient(135deg, rgba(5, 29, 46, 0.4) 0%, rgba(10, 18, 41, 0.2) 100%);
@@ -187,14 +187,6 @@ nav a:hover::after {
     color: #e8f4fc;
 }
 
-.distribution-text,
-.synopsis-text {
-    color: #e8f4fc;
-    line-height: 1.9;
-    font-size: 16px;
-    opacity: 0.95;
-}
-
 .rating-section {
     grid-column: 1 / -1; /* traverse toutes les colonnes du parent */
     width: 100%;
@@ -210,7 +202,7 @@ nav a:hover::after {
 }
 
 .watched-btn {
-    width: 10%;
+    width: 18%;
     justify-content: space-between;
     display: flex;
     align-items: center;
@@ -229,7 +221,7 @@ nav a:hover::after {
     background: linear-gradient(135deg, #47a7eb 0%, #3b8dc9 100%);
     color: #ffffff;
     padding: 20px 20px;
-    font-size: 25px;
+    font-size: 18px;
     font-weight: 400;
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -241,6 +233,41 @@ nav a:hover::after {
 }
 
 .watched-btn:hover .watched-text {
+    background: linear-gradient(135deg, #3b8dc9 0%, #47a7eb 100%);
+}
+
+.wished-btn {
+    width: 20%;
+    justify-content: space-between;
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(71, 167, 235, 0.25);
+}
+
+.wished-text {
+    width: 100%;
+    font-family: 'Bebas Neue', cursive;
+    background: linear-gradient(135deg, #47a7eb 0%, #3b8dc9 100%);
+    color: #ffffff;
+    padding: 20px 20px;
+    font-size: 18px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.wished-btn:hover {
+    box-shadow: 0 6px 25px rgba(71, 167, 235, 0.45);
+    transform: translateY(-2px);
+}
+
+.wished-btn:hover .watched-text {
     background: linear-gradient(135deg, #3b8dc9 0%, #47a7eb 100%);
 }
 
@@ -271,6 +298,70 @@ nav a:hover::after {
     color: #e8f4fc;
     transform: scale(1.15);
     text-shadow: 0 0 20px rgba(71, 167, 235, 0.8);
+}
+
+.episodes-section {
+    grid-column: 1 / -1; /* traverse toutes les colonnes */
+    display: grid;
+    box-sizing: border-box;
+
+    /* 🧱 Grille : 5 colonnes égales */
+    grid-template-columns: repeat(5, 1fr);
+    grid-auto-rows: auto; /* chaque ligne s’adapte à son contenu */
+    gap: 50px;
+    justify-items: center; /* centre horizontalement */
+    align-items: center;   /* centre verticalement */
+    /* 🎨 Style visuel */
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(5, 29, 46, 0.4) 0%, rgba(10, 18, 41, 0.2) 100%);
+    border-radius: 12px;
+    border: 1px solid rgba(71, 167, 235, 0.1);
+}
+
+.episodes-section > .full-row {
+    grid-column: 1 / -1;  /* traverse toutes les colonnes de la grille */
+    width: 100%;           /* s’assure que l’élément prend toute la largeur */
+    text-align: center;
+    display: block;        /* s’assure que c’est un bloc */
+    border-bottom: 2px solid rgba(71, 167, 235, 0.8);
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    box-sizing: border-box; /* inclut padding dans la largeur */
+}
+
+.watched-episode-btn {
+    width: 90%;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(71, 167, 235, 0.25);
+}
+
+.watched-episode-text {
+    width: 100%;
+    font-family: 'Bebas Neue', cursive;
+    background: linear-gradient(135deg, #47a7eb 0%, #3b8dc9 100%);
+    color: #ffffff;
+    padding: 20px 20px;
+    font-size: 18px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.watched-episode-btn:hover {
+    box-shadow: 0 6px 25px rgba(71, 167, 235, 0.45);
+    transform: translateY(-2px);
+}
+
+.watched-episode-btn:hover .watched-text {
+    background: linear-gradient(135deg, #3b8dc9 0%, #47a7eb 100%);
 }
 
 @media (max-width: 768px) {
