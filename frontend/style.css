@@ -98,7 +98,8 @@ html, body {
 body[data-page="watchlist"]     .nav-item[href*="watchlist"],
 body[data-page="wishlist"]      .nav-item[href*="wishlist"],
 body[data-page="bibliotheque"]  .nav-item[href*="bibliotheque"],
-body[data-page="compte"]        .nav-item[href*="compte"] {
+body[data-page="compte"]        .nav-item[href*="compte"],
+body[data-page="accueil"]        .nav-item[href*="index"] {
   border-bottom: 3px solid var(--accent);
   padding-bottom: 6px;
 }
@@ -137,6 +138,7 @@ body[data-page="compte"]        .nav-item[href*="compte"] {
   color: var(--text);
   letter-spacing: 3px;
   flex-shrink: 0;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
 }
 
 /* -- Bouton de filtre (étiquette) ---------------------------------------- */
@@ -237,7 +239,6 @@ select:focus-visible {
 /* Firefox : forcer l'apparence sombre de la popup */
 @supports (-moz-appearance:none) {
   select {
-    -moz-appearance: none;
     background-color: var(--bg2-plain);
     color: var(--text);
   }
@@ -352,6 +353,10 @@ select:focus-visible {
    - Poster, métadonnées, actions
    ============================================================================= */
 
+.card[data-id] { cursor: pointer; }
+.card[data-id]:focus { outline: 2px solid #4fc3f7; outline-offset: 2px; }
+
+
 /* Conteneur de carte */
 .carte {
   background: var(--bg2);
@@ -364,6 +369,7 @@ select:focus-visible {
   flex-direction: column;
   align-items: center;
   transition: transform .2s ease, box-shadow .2s ease;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
 }
 
 .carte:hover {
@@ -454,6 +460,7 @@ select:focus-visible {
   border-radius: 4px;
   padding: 4px 8px;
   font-family: 'Roboto', sans-serif;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
 }
 
 .boutons {
@@ -549,24 +556,24 @@ select:focus-visible {
    9) PAGE COMPTE — Auth
    ============================================================================= */
 
-.account {
+.account{
   min-height: 70vh;
   display: grid;
   place-items: center;
   padding: 40px 16px;
 }
 
-.auth-card {
+.auth-card  {
   width: 100%;
   max-width: 520px;
   background: var(--bg2);
   border: 1px solid #1b4258;
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
 }
 
-.auth-header {
+.auth-header  {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -673,4 +680,82 @@ select:focus-visible {
 
 .btn--accent:active {
   transform: translateY(1px);
+}
+
+/* Boîte centrée qui s’adapte à la largeur du contenu */
+.welcome {
+  /* dimensions */
+  inline-size: fit-content;                 /* largeur = largeur du contenu */
+  max-inline-size: min(90vw, 900px);        /* mais ne dépasse pas l’écran */
+  
+  /* style */
+  background: var(--bg2);
+  border: 1px solid #1b4258;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+
+  /* centrage et layout */
+  margin: 40px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  text-align: center;
+}
+
+.welcome h1 {
+    letter-spacing: 1.5px;
+}
+
+/* Paragraphe d’accroche — sans retour à la ligne */
+.welcome p {
+  font-family: 'Roboto', sans-serif;
+  font-size: 1.25rem;       /* ~20px */
+  line-height: 1.5;
+  margin: 8px 0 16px;
+  opacity: .95;
+  white-space: nowrap;
+  letter-spacing: 0.8px;       /* <-- empêche le retour à la ligne */
+}
+
+/* ========== FOOTER POPFLIX ========== */
+.site-footer {
+  background: linear-gradient(180deg, #061a2a 0%, #0b2033 100%);
+  color: #e8f4fc;
+  text-align: center;
+  padding: 30px 10px;
+  border-top: 1px solid rgba(232, 244, 252, 0.1);
+  margin-top: 60px;
+  font-family: 'Roboto', sans-serif;
+}
+
+.site-footer .footer-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.footer-text {
+  font-size: 14px;
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  flex-wrap: wrap;
+}
+
+.footer-link {
+  color: #e8f4fc;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.footer-link:hover {
+  color: #47a7eb;
+  text-shadow: 0 0 10px rgba(71, 167, 235, 0.8);
 }

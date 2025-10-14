@@ -144,15 +144,18 @@ function cleanPoster(url) {
   return u;
 }
 
-function toCardHTML(item) {
-  const poster   = cleanPoster(item.poster);
-  const title    = (item.title || "").toString().trim();
-  const typeFr   = (item.type || "").toString().trim();  // "Film" | "Série"
-  const isSerie  = typeFr.toLowerCase().startsWith('s');
-  const type     = isSerie ? 'serie' : 'film';            // normalisé pour data/class
-  const year     = item.year || "";
-  const genre    = (item.genre || "").toString().trim();
-  const synopsis = (item.synopsis || "").toString().trim();
+
+  function toCardHTML(item) {
+    const poster   = cleanPoster(item.poster);
+    const title    = (item.title || "").toString().trim();
+    const typeFr   = (item.type || "").toString().trim();  // "Film" | "Série"
+    const isSerie  = typeFr.toLowerCase().startsWith('s');
+    const type     = isSerie ? 'serie' : 'film';            // normalisé pour data/class
+    const year     = item.year || "";
+    const genre    = (item.genre || "").toString().trim();
+    const synopsis = (item.synopsis || "").toString().trim();
+
+
 
   return `
     <article class="carte ${type}" data-type="${type}">
@@ -272,46 +275,58 @@ function setButtonLabel(el, text) {
 }
 
 function onCatalogClick(e) {
+  // 1) Boutons watchlist / wishlist (inchangé)
   const btn = e.target.closest('.btn-watchlist, .btn-wishlist');
-  if (!btn) return;
-  e.preventDefault();
+  if (btn) {
+    e.preventDefault();
 
-  const article = btn.closest('article.carte');
-  if (!article) return;
+    const article = btn.closest('article.carte');
+    if (!article) return;
 
-  const idEl = article.querySelector('.card[data-id]');
-  const id = idEl?.dataset?.id;
+    const idEl = article.querySelector('.card[data-id]');
+    const id = idEl?.dataset?.id;
+    if (!id) return;
+
+    const item = items.find(it => it.id === id);
+    if (!item) return;
+
+    const payload = {
+      id: item.id,
+      title: item.title,
+      image: cleanPoster(item.poster) || PLACEHOLDER,
+      type: (item.type || '').toLowerCase().startsWith('s') ? 'serie' : 'film',
+      year: item.year || '',
+      genre: item.genre || '',
+      synopsis: item.synopsis || ''
+    };
+
+    const key = btn.classList.contains('btn-wishlist') ? 'wishlist' : 'watchlist';
+    const added = saveToList(key, payload);
+
+    btn.setAttribute('aria-live', 'polite');
+    if (added) {
+      setButtonLabel(btn, 'Ajouté ✓');
+      btn.classList.add('is-added');
+      btn.setAttribute('aria-label', 'Ajouté à la liste');
+    } else {
+      setButtonLabel(btn, 'Déjà ajouté');
+      btn.classList.add('is-added');
+      btn.setAttribute('aria-label', 'Déjà présent dans la liste');
+    }
+    return; // ⚠️ ne pas propager au clic de navigation
+  }
+
+  // 2) Navigation vers la page carte au clic sur la carte
+  const card = e.target.closest('.card[data-id]');
+  if (!card) return;
+
+  const id = card.dataset.id;
   if (!id) return;
 
-  const item = items.find(it => it.id === id);
-  if (!item) return;
-
-  // Payload COMPLET et normalisé (clé unique pour listes locales)
-  const payload = {
-    id: item.id,
-    title: item.title,
-    image: cleanPoster(item.poster) || PLACEHOLDER,
-    type: (item.type || '').toLowerCase().startsWith('s') ? 'serie' : 'film',
-    year: item.year || '',
-    genre: item.genre || '',
-    synopsis: item.synopsis || ''
-  };
-
-  const key = btn.classList.contains('btn-wishlist') ? 'wishlist' : 'watchlist';
-  const added = saveToList(key, payload);
-
-  // Feedback visuel persistant (vert via .is-added en CSS)
-  btn.setAttribute('aria-live', 'polite');
-  if (added) {
-    setButtonLabel(btn, 'Ajouté ✓');
-    btn.classList.add('is-added');
-    btn.setAttribute('aria-label', 'Ajouté à la liste');
-  } else {
-    setButtonLabel(btn, 'Déjà ajouté');
-    btn.classList.add('is-added');
-    btn.setAttribute('aria-label', 'Déjà présent dans la liste');
-  }
+  // Redirige vers carte.html avec l'ID en query string
+  window.location.href = `/carte.html?id=${encodeURIComponent(id)}`;
 }
+
 
 /* =========================================================
    10) FILTRES (UI) — câblage des <select> et <input>
