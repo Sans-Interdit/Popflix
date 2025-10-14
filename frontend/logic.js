@@ -29,11 +29,12 @@ function toCardHTML(item) {
         </div>
 
         <div class="card-body">
+            <div class="container">
+                <span class="type">${item.type}</span></div>
           <h3>${item.title}</h3>
           <ul class="meta">
-            <li>Année : ${item.year}</li>
-            <li>Type : ${item.type}</li>
-            <li>Genre : ${item.genre}</li>
+            <li>${item.year}</li>
+            <li>${item.genre}</li>
           </ul>
           <div class="synopsis-label">Un bref synopsis :</div>
           <div class="synopsis">${item.synopsis}</div>

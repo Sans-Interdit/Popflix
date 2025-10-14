@@ -45,6 +45,11 @@ html,body{
     color:var(--accent);                     
 }
 
+.logo-img{
+    height: 80px;
+  width: auto;
+}
+
 .slogan{
     font-size:22px;
     color:var(--accent);
@@ -220,7 +225,6 @@ html,body{
   margin: 0 0 6px;
   font-family: 'Bebas Neue', sans-serif;
   font-size: 20px;
-  text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text);
 }
@@ -236,17 +240,16 @@ html,body{
 }
 
 .synopsis-label {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'Roboto', sans-serif;
   font-size: 14px;
   color: #cfe5f7;
   margin: 8px 0 2px;
 }
 
 .synopsis {
+    font-family: 'Roboto', sans-serif;
   font-size: 13px;
   color: #bcd1e3;
-  border-top: 1px dotted #456b86;
-  border-bottom: 1px dotted #456b86;
   padding: 6px 0;
   line-height: 1.4;
 }
@@ -262,13 +265,27 @@ html,body{
   color: var(--bg);
   font: 800 14px/1 'Bebas Neue', sans-serif;
   letter-spacing: 0.6px;
-  text-transform: uppercase;
-  transition: background 0.2s ease;
 }
 
 .btn:hover {
   background: #3595d8;
 }
+
+.type {
+  display: inline-block;      
+  color: var(--text);             
+  background-color: transparent;   
+  border: 2px solid var(--accent);  
+  border-radius: 4px;          
+  padding: 4px 8px;      
+  font-family: 'Roboto', sans-serif;
+}
+
+.container {
+  display: flex;
+  justify-content: flex-end; /* pousse le contenu à droite */
+}
+
 
 /* === Responsive === */
 @media (max-width: 1000px) {
