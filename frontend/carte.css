@@ -324,13 +324,13 @@ nav a:hover::after {
     text-align: center;
     display: block;        /* s’assure que c’est un bloc */
     border-bottom: 2px solid rgba(71, 167, 235, 0.8);
-    padding-bottom: 20px;
-    margin-bottom: 20px;
+    margin-top : 10px;
+    padding-bottom: 40px;
     box-sizing: border-box; /* inclut padding dans la largeur */
 }
 
 .watched-episode-btn {
-    width: 90%;
+    width: 100%;
     justify-content: center;
     display: flex;
     align-items: center;

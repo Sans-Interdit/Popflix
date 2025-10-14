@@ -10,52 +10,49 @@ const watchedText = watchedBtn.querySelector(".watched-text");
 let isWatched = false;
 
 const wishedState = {
-  false: "Ajouter à la wishlist",
-  true: "☑ Dans votre wishlist"
+    false: "Ajouter à la wishlist",
+    true: "☑ Dans votre wishlist"
 };
 
 const watchedState = {
-  false: "J'ai vu cette œuvre",
-  true: "☑ Œuvre regardée !"
+    false: "J'ai vu cette œuvre",
+    true: "☑ Œuvre regardée !"
 };
 
-
+const appState = {
+    oeuvre: null,
+    episodesWatched: [] // <--- tableau pour suivre les états
+};
 
 document.addEventListener('DOMContentLoaded', async function() {
-    const oeuvre = {
+    appState.oeuvre = {
         type: "Série",
         title: "Game of Thrones",
         number_of_episodes: 73,
         release_date : "2011-04-17",
         overview : "Des maisons nobles se disputent le pouvoir, tandis qu’une menace surgit au nord.",
         poster_path : "/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg",
-        genres : "Sci-Fi & Fantasy, Drama, Action & Adventure",
-        type : "Série"
+        genres : "Sci-Fi & Fantasy, Drama, Action & Adventure"
     };
 
-    // const oeuvre = {
-    //     title : "Inception",
-    //     release_date : "2010-07-15",
-    //     overview : "Cobb, un voleur qualifié qui commet un espionnage d'entreprise en infiltrant le subconscient de ses cibles se fait la possibilité de retrouver son ancienne vie de paiement d'une tâche considérée comme impossible: 'Inception', l'implantation de l'idée d'une autre personne dans le subconscient d'une cible.",
-    //     poster_path : "/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg",
-    //     genres : "Action, Science Fiction, Adventure",
-    //     type : "Film",
-    // }
-
-    const container = document.querySelector(".movie-container");
-    
     const info_values = document.querySelectorAll(".info-value");
     for (let info_value of info_values) {
         const field = info_value.dataset.field;
-        info_value.textContent = oeuvre[field];
+        info_value.textContent = appState.oeuvre[field];
     }
 
-    if (oeuvre["type"] == "Série" && oeuvre["number_of_episodes"] > 0) {
+    if (appState.oeuvre.poster_path) {
+        document.querySelector("#poster").src = "https://image.tmdb.org/t/p/w500" + appState.oeuvre.poster_path;
+    }
+
+    const container = document.querySelector(".movie-container");
+
+    if (appState.oeuvre.type === "Série" && appState.oeuvre.number_of_episodes > 0) {
         const episodesSection = document.createElement("div");
         episodesSection.classList.add("episodes-section");
         episodesSection.innerHTML = `
             <h2 class="full-row">Episodes visionnés</h2>
-            ${Array.from({ length: oeuvre.number_of_episodes }, (_, i) => `
+            ${Array.from({ length: appState.oeuvre.number_of_episodes }, (_, i) => `
                 <button class="watched-episode-btn">
                     <span class="watched-episode-text">Épisode ${i + 1}</span>
                 </button>
@@ -64,24 +61,32 @@ document.addEventListener('DOMContentLoaded', async function() {
         container.appendChild(episodesSection);
 
         const episodeButtons = episodesSection.querySelectorAll(".watched-episode-btn");
-        episodeButtons.forEach((btn, index) => {
-            let isWatched = false;
+        appState.episodesWatched = Array(appState.oeuvre.number_of_episodes).fill(false);
 
+        episodeButtons.forEach((btn, index) => {
             btn.addEventListener("click", () => {
-                isWatched = !isWatched;
+                // On inverse l’état
+                appState.episodesWatched[index] = !appState.episodesWatched[index];
                 switchButton(
                     btn,
                     btn.querySelector(".watched-episode-text"),
                     {
                         false: `Épisode ${index + 1}`,
-                        true: `☑ Épisode ${index + 1} vu !`
+                        true: `✔ Épisode ${index + 1} vu !`
                     },
-                    isWatched
+                    appState.episodesWatched[index]
                 );
+
+                // On met à jour l’état global : si tous les épisodes sont vus → isWatched = true
+                const allWatched = appState.episodesWatched.every(Boolean);
+                if (isWatched !== allWatched) {
+                    isWatched = allWatched;
+                    switchButton(watchedBtn, watchedText, watchedState, isWatched);
+                }
             });
         });
     }
-})
+});
 
 wishedBtn.addEventListener("click", () => {
     isWished = !isWished;
@@ -90,8 +95,35 @@ wishedBtn.addEventListener("click", () => {
 
 watchedBtn.addEventListener("click", () => {
     isWatched = !isWatched;
+    appState.episodesWatched = appState.episodesWatched.map(() => isWatched);
+    const episodeButtons = document.querySelectorAll(".watched-episode-btn");
+
+    episodeButtons.forEach((btn, index) => {
+        switchButton(
+            btn,
+            btn.querySelector(".watched-episode-text"),
+            {
+                false: `Épisode ${index + 1}`,
+                true: `✔ Épisode ${index + 1} vu !`
+            },
+            appState.episodesWatched[index]
+        );
+    });
+
     switchButton(watchedBtn, watchedText, watchedState, isWatched);
 });
+
+function switchButton(button, text, state, value) {
+    if (value) {
+        button.classList.add("active");
+        text.textContent = state.true;
+        text.style.background = "linear-gradient(135deg, #1e824c 0%, #2ecc71 100%)";
+    } else {
+        button.classList.remove("active");
+        text.textContent = state.false;
+        text.style.background = "linear-gradient(135deg, #47a7eb 0%, #3b8dc9 100%)";
+    }
+}
 
 // Système de notation par étoiles
 stars.forEach((star, index) => {
@@ -113,21 +145,6 @@ const starsContainer = document.querySelector('.stars');
 starsContainer.addEventListener('mouseleave', function() {
     setRating(currentRating);
 });
-
-
-function switchButton(button, text, state, value) {
-    if (value) {
-        // Changement de style + animation
-        button.classList.add("active");
-        text.textContent = state.true;
-        text.style.background = "linear-gradient(135deg, #1e824c 0%, #2ecc71 100%)";
-    } else {
-        // Retour à l’état initial
-        button.classList.remove("active");
-        text.textContent = state.false;
-        text.style.background = "linear-gradient(135deg, #47a7eb 0%, #3b8dc9 100%)";
-    }
-}
 
 // Fonction pour illuminer les étoiles
 function highlightStars(count) {
