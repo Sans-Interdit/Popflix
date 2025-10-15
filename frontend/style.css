@@ -99,6 +99,7 @@ body[data-page="watchlist"]     .nav-item[href*="watchlist"],
 body[data-page="wishlist"]      .nav-item[href*="wishlist"],
 body[data-page="bibliotheque"]  .nav-item[href*="bibliotheque"],
 body[data-page="compte"]        .nav-item[href*="compte"],
+body[data-page="contact"]        .nav-item[href*="contact"],
 body[data-page="accueil"]        .nav-item[href*="index"] {
   border-bottom: 3px solid var(--accent);
   padding-bottom: 6px;
@@ -556,7 +557,7 @@ select:focus-visible {
    9) PAGE COMPTE — Auth
    ============================================================================= */
 
-.account{
+.account {
   min-height: 70vh;
   display: grid;
   place-items: center;
@@ -758,4 +759,82 @@ select:focus-visible {
 .footer-link:hover {
   color: #47a7eb;
   text-shadow: 0 0 10px rgba(71, 167, 235, 0.8);
+}
+
+.legals {
+  background: var(--bg2);
+  border: 1px solid #1b4258;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+  text-align: center;
+}
+
+.legals h1 {
+  font-size: 36px;
+}
+
+.texte-legal {
+  font-family: 'Roboto', sans-serif;
+  margin-left: 80px;
+  margin-top: 40px;
+}
+
+.legals-links {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  flex-wrap: wrap;
+}
+
+.legals-link {
+  color: #e8f4fc;
+  text-decoration: none;
+  font-size: 24px;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.legals-link:hover {
+  color: #47a7eb;
+  text-shadow: 0 0 10px rgba(71, 167, 235, 0.8);
+}
+
+.formulaire-tally {
+  background-color: var(--bg);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; 
+  padding-top: 20px;    
+  padding-bottom: 30px;    
+  min-height: 100vh;
+}
+
+.formulaire-tally iframe {
+  width: 90%;              /* plus large que 800px, responsive */
+  max-width: 1000px;       /* élargit le formulaire */
+  height: 1000px;           /* augmente la hauteur */
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+}
+
+.tally{
+  width: 100%;
+  max-width: 520px;
+  background: var(--bg2);
+  border: 1px solid #1b4258;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+  text-align: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 34px;
+  margin: 0 auto;
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+iframe[data-tally-src] {
+  display: block;
+  margin-top: -60px; /* réduit la marge haute visible */
 }

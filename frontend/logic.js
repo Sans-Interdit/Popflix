@@ -259,14 +259,20 @@ function applyFilters() {
    ========================================================= */
 function saveToList(listName, item) {
   try {
-    const list = JSON.parse(localStorage.getItem(listName)) || [];
-    const exists = list.some(i => (i.id && item.id && i.id === item.id) || i.title === item.title);
+    const list = JSON.parse(localStorage.getItem(listName) || '[]');
+    const norm = s => (s||'').toString().trim().toLowerCase()
+      .normalize('NFD').replace(/\p{Diacritic}/gu,''); // casse + accents
+    const exists = list.some(i => {
+      if (i.id && item.id) return i.id === item.id;     // priorité à l'ID
+      return norm(i.title) === norm(item.title);        // fallback titre
+    });
     if (exists) return false;
     list.push(item);
     localStorage.setItem(listName, JSON.stringify(list));
     return true;
   } catch { return false; }
 }
+
 
 function setButtonLabel(el, text) {
   if (!el) return;
@@ -275,20 +281,25 @@ function setButtonLabel(el, text) {
 }
 
 function onCatalogClick(e) {
-  // 1) Boutons watchlist / wishlist (inchangé)
   const btn = e.target.closest('.btn-watchlist, .btn-wishlist');
   if (btn) {
+    // anti double-clic / double-handler
+    if (btn.dataset.lock === '1') return;
+    btn.dataset.lock = '1';
+
     e.preventDefault();
+    e.stopPropagation();
+    if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
 
     const article = btn.closest('article.carte');
-    if (!article) return;
+    if (!article) { btn.dataset.lock = '0'; return; }
 
     const idEl = article.querySelector('.card[data-id]');
-    const id = idEl?.dataset?.id;
-    if (!id) return;
+    const id   = idEl?.dataset?.id;
+    if (!id) { btn.dataset.lock = '0'; return; }
 
     const item = items.find(it => it.id === id);
-    if (!item) return;
+    if (!item) { btn.dataset.lock = '0'; return; }
 
     const payload = {
       id: item.id,
@@ -313,18 +324,18 @@ function onCatalogClick(e) {
       btn.classList.add('is-added');
       btn.setAttribute('aria-label', 'Déjà présent dans la liste');
     }
-    return; // ⚠️ ne pas propager au clic de navigation
+
+    // relâche le verrou (évite le spam de clics)
+    setTimeout(() => { btn.dataset.lock = '0'; }, 350);
+    return;
   }
 
-  // 2) Navigation vers la page carte au clic sur la carte
+  // navigation si clic ailleurs sur la carte
   const card = e.target.closest('.card[data-id]');
   if (!card) return;
-
   const id = card.dataset.id;
   if (!id) return;
-
-  // Redirige vers carte.html avec l'ID en query string
-  window.location.href = `carte.html?id=${encodeURIComponent(id)}`;
+  window.location.href = `/carte.html?id=${encodeURIComponent(id)}`;
 }
 
 
