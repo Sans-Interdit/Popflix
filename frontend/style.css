@@ -386,7 +386,7 @@ select:focus-visible {
    - Conteneur des cartes
    ============================================================================= */
 
-.library-grid {
+.library-grid, .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 60px 50px;
