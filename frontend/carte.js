@@ -25,67 +25,107 @@ const appState = {
 };
 
 document.addEventListener('DOMContentLoaded', async function() {
-    appState.oeuvre = {
-        type: "Série",
-        title: "Game of Thrones",
-        number_of_episodes: 73,
-        release_date : "2011-04-17",
-        overview : "Des maisons nobles se disputent le pouvoir, tandis qu’une menace surgit au nord.",
-        poster_path : "/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg",
-        genres : "Sci-Fi & Fantasy, Drama, Action & Adventure"
-    };
+    const params = new URLSearchParams(document.location.search);
+    const id = params.get("id");
+    const urlBack = "http://127.0.0.1:5000/get_event?id=" + id
+    fetch(urlBack, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (response.status === 200 || response.status === 201) {
+            return response.json()
+        } else {
+            return Promise.reject("Échec de la requête");
+        }
+    })
+    .then(response => {
+        console.log(response)
+        appState.oeuvre = {
+            type: response.type,
+            title: response.title,
+            number_of_episodes: 10, // TODO
+            release_date : response.year,
+            overview : response.synopsis,
+            genres : response.genre
+        };
 
-    const info_values = document.querySelectorAll(".info-value");
-    for (let info_value of info_values) {
-        const field = info_value.dataset.field;
-        info_value.textContent = appState.oeuvre[field];
-    }
+        const info_values = document.querySelectorAll(".info-value");
+        for (let info_value of info_values) {
+            const field = info_value.dataset.field;
+            info_value.textContent = appState.oeuvre[field];
+        }
 
-    if (appState.oeuvre.poster_path) {
-        document.querySelector("#poster").src = "https://image.tmdb.org/t/p/w500" + appState.oeuvre.poster_path;
-    }
 
-    const container = document.querySelector(".movie-container");
-
-    if (appState.oeuvre.type === "Série" && appState.oeuvre.number_of_episodes > 0) {
-        const episodesSection = document.createElement("div");
-        episodesSection.classList.add("episodes-section");
-        episodesSection.innerHTML = `
-            <h2 class="full-row">Episodes visionnés</h2>
-            ${Array.from({ length: appState.oeuvre.number_of_episodes }, (_, i) => `
-                <button class="watched-episode-btn">
-                    <span class="watched-episode-text">Épisode ${i + 1}</span>
-                </button>
-            `).join("")}
-        `;
-        container.appendChild(episodesSection);
-
-        const episodeButtons = episodesSection.querySelectorAll(".watched-episode-btn");
-        appState.episodesWatched = Array(appState.oeuvre.number_of_episodes).fill(false);
-
-        episodeButtons.forEach((btn, index) => {
-            btn.addEventListener("click", () => {
-                // On inverse l’état
-                appState.episodesWatched[index] = !appState.episodesWatched[index];
-                switchButton(
-                    btn,
-                    btn.querySelector(".watched-episode-text"),
-                    {
-                        false: `Épisode ${index + 1}`,
-                        true: `✔ Épisode ${index + 1} vu !`
-                    },
-                    appState.episodesWatched[index]
-                );
-
-                // On met à jour l’état global : si tous les épisodes sont vus → isWatched = true
-                const allWatched = appState.episodesWatched.every(Boolean);
-                if (isWatched !== allWatched) {
-                    isWatched = allWatched;
-                    switchButton(watchedBtn, watchedText, watchedState, isWatched);
-                }
-            });
+        const TMDB_BASE = "https://api.themoviedb.org/3";
+        const kind = appState.oeuvre.type=="Série" ? "tv" : "movie";
+        const params = new URLSearchParams({
+            api_key: "186e91ca5cf68f37adff53da8ea51136",
+            query: appState.oeuvre.title || "",
+            include_adult: "false",
+            language: "fr-FR"
         });
-    }
+
+        url = `${TMDB_BASE}/search/${kind}?${params.toString()}`;
+        r = fetch(url)
+        .then(r => {
+            if (r.ok) {
+                return r.json();
+            }
+        })
+        .then(data => {
+            console.log(data)
+            if (data.results?.[0]?.poster_path) {
+                document.querySelector("#poster").src = "https://image.tmdb.org/t/p/w500" + data.results[0].poster_path;
+            };
+        })
+    })
+
+
+
+    // const container = document.querySelector(".movie-container");
+
+    // if (appState.oeuvre.type === "Série" && appState.oeuvre.number_of_episodes > 0) {
+    //     const episodesSection = document.createElement("div");
+    //     episodesSection.classList.add("episodes-section");
+    //     episodesSection.innerHTML = `
+    //         <h2 class="full-row">Episodes visionnés</h2>
+    //         ${Array.from({ length: appState.oeuvre.number_of_episodes }, (_, i) => `
+    //             <button class="watched-episode-btn">
+    //                 <span class="watched-episode-text">Épisode ${i + 1}</span>
+    //             </button>
+    //         `).join("")}
+    //     `;
+    //     container.appendChild(episodesSection);
+
+    //     const episodeButtons = episodesSection.querySelectorAll(".watched-episode-btn");
+    //     appState.episodesWatched = Array(appState.oeuvre.number_of_episodes).fill(false);
+
+    //     episodeButtons.forEach((btn, index) => {
+    //         btn.addEventListener("click", () => {
+    //             // On inverse l’état
+    //             appState.episodesWatched[index] = !appState.episodesWatched[index];
+    //             switchButton(
+    //                 btn,
+    //                 btn.querySelector(".watched-episode-text"),
+    //                 {
+    //                     false: `Épisode ${index + 1}`,
+    //                     true: `✔ Épisode ${index + 1} vu !`
+    //                 },
+    //                 appState.episodesWatched[index]
+    //             );
+
+    //             // On met à jour l’état global : si tous les épisodes sont vus → isWatched = true
+    //             const allWatched = appState.episodesWatched.every(Boolean);
+    //             if (isWatched !== allWatched) {
+    //                 isWatched = allWatched;
+    //                 switchButton(watchedBtn, watchedText, watchedState, isWatched);
+    //             }
+    //         });
+    //     });
+    // }
 });
 
 wishedBtn.addEventListener("click", () => {

@@ -6,11 +6,22 @@
     box-sizing: border-box;
 }
 
-body {
-    font-family: 'Roboto', sans-serif;
-    background: linear-gradient(135deg, #0D1118 0%, #0a1229 100%);
-    color: #e8f4fc;
-    min-height: 100vh;
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Bebas Neue', 'Roboto', Arial, sans-serif;
+}
+
+:root {
+  --bg:    linear-gradient(135deg, #0D1118 0%, #0a1229 100%); /* Fond principal */
+  --bg2:   linear-gradient(180deg, rgba(5, 29, 46, 0.95) 0%, #0a1229 100%); /* Surfaces */
+  --text:  #e8f4fc;          /* Texte principal */
+  --accent:#47a7eb;          /* Couleur d’accent (cta, focus, bordures actives) */
+  --card:  #051d2e;          /* Fond des cartes (fallback/solide) */
+  --bg2-plain: #0a1229;      /* Version solide pour menus/options */
+  --accent-plain: #47a7eb;   /* Accent solide */
 }
 
 header {
@@ -23,6 +34,83 @@ header {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     border-bottom: 1px solid rgba(71, 167, 235, 0.1);
 }
+
+/* =============================================================================
+   1) EN-TÊTE (TOPBAR)
+   - Marque, slogan, logo
+   ============================================================================= */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg2);
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--accent);
+}
+
+/* -- Marque --------------------------------------------------------------- */
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* -- Logo texte / image --------------------------------------------------- */
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-weight: 800;
+  font-size: 50px;
+  letter-spacing: 2px;
+  color: var(--accent);
+}
+
+.logo-img {
+  height: 80px;
+  width: auto;
+}
+
+.slogan {
+  font-size: 22px;
+  color: var(--accent);
+  letter-spacing: .5px;
+}
+
+.main-nav {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+}
+
+/* Liens du menu */
+.nav-item {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 2px;
+  transition: opacity .15s ease-in-out;
+}
+
+.nav-item:hover { opacity: .9; }
+
+/* Actif selon la page (via body[data-page]) */
+body[data-page="watchlist"]     .nav-item[href*="watchlist"],
+body[data-page="wishlist"]      .nav-item[href*="wishlist"],
+body[data-page="bibliotheque"]  .nav-item[href*="bibliotheque"],
+body[data-page="compte"]        .nav-item[href*="compte"],
+body[data-page="accueil"]        .nav-item[href*="index"] {
+  border-bottom: 3px solid var(--accent);
+  padding-bottom: 6px;
+}
+
+
+
+
+
+
+
+
 
 .logo-section h1 {
     font-family: 'Bebas Neue', cursive;

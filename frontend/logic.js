@@ -324,7 +324,7 @@ function onCatalogClick(e) {
   if (!id) return;
 
   // Redirige vers carte.html avec l'ID en query string
-  window.location.href = `/carte.html?id=${encodeURIComponent(id)}`;
+  window.location.href = `carte.html?id=${encodeURIComponent(id)}`;
 }
 
 
