@@ -1,36 +1,23 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <!-- =========================================================
-       0) MÉTA + ASSETS GLOBAUX (polices, CSS)
-       - Titre, encodage, viewport
-       - Preconnect + chargement des Google Fonts
-       - Feuille de style principale
-     ========================================================= -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>POPFLIX — Ma Wishlist</title>
 
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
-  <!-- CSS principal -->
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body data-page="wishlist">
-  <!-- =========================================================
-       1) EN-TÊTE (Top bar + Navigation principale)
-       - Logo + slogan
-       - Menu principal (l’état actif est géré via body[data-page])
-     ========================================================= -->
   <header class="topbar">
     <div class="brand">
       <div class="logo">
         <span>POPFLIX</span>
-        <img src="/data/images/logo_popflix.png" alt="Logo POPFLIX" class="logo-img">
+        <img src="./data/images/logo_popflix.png" alt="Logo POPFLIX" class="logo-img">
       </div>
       <div class="slogan">LE POPCORN DU BINGE-WATCH</div>
     </div>
@@ -45,16 +32,10 @@
     </nav>
   </header>
 
-  <!-- =========================================================
-       2) BARRE DE FILTRES (UI visuelle uniquement ici)
-       - Type, Genre, Statut, Recherche texte + bouton Reset
-       - NB : ces filtres sont locaux à la page (pas reliés à CSV)
-     ========================================================= -->
   <section class="filters" id="filters">
     <h2>MA WISHLIST</h2>
 
     <div class="filters-right">
-      <!-- TYPE -->
       <div class="filter-group">
         <button class="filtre" type="button" tabindex="-1" aria-hidden="true">TYPE</button>
         <select id="type-select" class="select">
@@ -64,13 +45,11 @@
         </select>
       </div>
 
-      <!-- GENRE -->
       <div class="filter-group">
         <button class="filtre" type="button" tabindex="-1" aria-hidden="true">GENRE</button>
         <select id="genre-select" class="select"></select>
       </div>
 
-      <!-- STATUT -->
       <div class="filter-group">
         <button class="filtre" type="button" tabindex="-1" aria-hidden="true">STATUT</button>
         <select id="statut-select" class="select">
@@ -80,7 +59,6 @@
         </select>
       </div>
 
-      <!-- TITRE -->
       <div class="filter-group">
         <button class="filtre" type="button" tabindex="-1" aria-hidden="true">TITRE</button>
         <input id="q" class="input" type="text" placeholder="Rechercher un titre…" />
@@ -89,18 +67,78 @@
     </div>
   </section>
 
-  <!-- =========================================================
-       3) CONTENEUR DES CARTES
-       - La grille qui recevra dynamiquement les cartes
-     ========================================================= -->
   <section id="catalog" class="grid"></section>
 
-  <!-- =========================================================
-       4) BUILDER DE CARTE (HTML) + ACTIONS
-       - buildCard(item) crée l'HTML d'une carte à partir d'un item
-       - showActions=true => affiche la barre .boutons (Ajouter / Retirer)
-       - Les attributs data-* servent pour ré-extraire l'item plus tard
-     ========================================================= -->
+  <script>
+    const PLACEHOLDER = "./data/images/placeholder_poster.png";
+    const TMDB_KEY  = "186e91ca5cf68f37adff53da8ea51136";
+    const TMDB_BASE = "https://api.themoviedb.org/3";
+
+    async function tmdbSearchId(title, year, isTv){
+      const kind = isTv ? "tv" : "movie";
+      const p = new URLSearchParams({
+        api_key: TMDB_KEY, language: "fr-FR", query: title || "", include_adult: "false"
+      });
+      if (year && /^\d{4}$/.test(String(year))) {
+        p.set(isTv ? "first_air_date_year" : "year", String(year));
+      }
+      const r = await fetch(`${TMDB_BASE}/search/${kind}?${p}`);
+      const j = r.ok ? await r.json() : null;
+      return j?.results?.[0]?.id || null;
+    }
+
+    async function tmdbCredits(kind, id){
+      try{
+        const endpoint = kind === "tv" ? "aggregate_credits" : "credits";
+        const r = await fetch(`${TMDB_BASE}/${kind}/${id}/${endpoint}?api_key=${TMDB_KEY}&language=fr-FR`);
+        const j = r.ok ? await r.json() : null;
+        if (!j) return { director: "", actors: "" };
+
+        let director = "";
+        if (j.crew?.length){
+          const dirs = j.crew.filter(c => (c.job === "Director" || c.jobs?.some?.(jj => jj.job === "Director"))).map(c=>c.name);
+          director = [...new Set(dirs)].slice(0,3).join(", ");
+        }
+        let actors = "";
+        if (Array.isArray(j.cast)){
+          actors = j.cast.map(c => c.name).slice(0,5).join(", ");
+        }
+        return { director, actors };
+      }catch{ return { director:"", actors:"" }; }
+    }
+
+    async function hydrateCardIfMissing(cardEl){
+      const hasDirector = (cardEl.getAttribute('data-director') || "").trim();
+      const hasActors   = (cardEl.getAttribute('data-actors') || "").trim();
+      if (hasDirector && hasActors) return;
+
+      const title = cardEl.getAttribute('data-title') || "";
+      const year  = cardEl.getAttribute('data-annee') || "";
+      const type  = (cardEl.getAttribute('data-type') || 'film').toLowerCase();
+      const isTv  = (type === 'serie');
+
+      const id = await tmdbSearchId(title, year, isTv);
+      if (!id) return;
+
+      const { director, actors } = await tmdbCredits(isTv ? "tv" : "movie", id);
+      if (!(director || actors)) return;
+
+      if (director) cardEl.setAttribute('data-director', director);
+      if (actors)   cardEl.setAttribute('data-actors', actors);
+
+      try{
+        const list = JSON.parse(localStorage.getItem('wishlist') || '[]');
+        const elId = cardEl.getAttribute('data-id');
+        const idx = list.findIndex(it => it.id === elId);
+        if (idx >= 0){
+          list[idx].director = list[idx].director || director;
+          list[idx].actors   = list[idx].actors   || actors;
+          localStorage.setItem('wishlist', JSON.stringify(list));
+        }
+      }catch{}
+    }
+  </script>
+
   <script>
     function buildCard(item, { showActions = true } = {}) {
       const el = document.createElement('article');
@@ -108,48 +146,44 @@
       el.className = 'carte ' + (isSerie ? 'serie' : 'film');
       el.setAttribute('data-type', isSerie ? 'serie' : 'film');
 
-      // Attributs data-* pour retrouver les infos depuis le DOM
       el.setAttribute('data-id', item.id || '');
       el.setAttribute('data-title', item.title || '');
-      el.setAttribute('data-image', item.image || '');
+      el.setAttribute('data-image', item.image || item.poster || '');
       el.setAttribute('data-genre', item.genre || '');
-      el.setAttribute('data-synopsis', item.synopsis || '');
       el.setAttribute('data-annee', item.year || item.annee || '');
+      el.setAttribute('data-director', item.director || '');
+      el.setAttribute('data-actors', item.actors || '');
+      el.setAttribute('data-synopsis', item.synopsis || item.synopsis_short || '');
 
-      // Champs d'affichage
       const title = item.title || 'Sans titre';
-      const poster = item.image || '';
+      const poster = (item.image || item.poster || '').trim() || PLACEHOLDER;
       const typeLabel = isSerie ? 'Série' : 'Film';
       const annee = item.year || item.annee || '';
       const genre = item.genre || '';
-      const synopsis = item.synopsis || '';
+      const synopsis = item.synopsis || item.synopsis_short || '';
 
-      // Structure visuelle de la carte
       el.innerHTML = `
         <div class="card" data-id="${item.id || ''}">
           <div class="poster">
-            <img class="poster-img" src="${poster}" alt="${title}">
+            <img class="poster-img" src="${poster}" alt="${title}"
+                 loading="lazy" decoding="async"
+                 onerror="this.onerror=null; this.src='${PLACEHOLDER}';">
           </div>
-
           <div class="card-body">
             <div class="container"><span class="type">${typeLabel}</span></div>
             <h3 class="title">${title}</h3>
-
             <ul class="meta">
               ${annee ? `<li class="year">${annee}</li>` : ''}
               ${genre ? `<li class="genre">${genre}</li>` : ''}
             </ul>
-
             ${synopsis ? `
               <div class="synopsis-label">Synopsis</div>
               <p class="synopsis">${synopsis}</p>
             ` : ''}
           </div>
         </div>
-
         ${showActions ? `
           <div class="boutons">
-            <!-- même effet visuel que sur la biblio : vert persistant via .btn-watchlist.is-added -->
             <button type="button" class="btn btn-watchlist add-watchlist" data-action="add-watchlist">Ajouter à ma watchlist</button>
             <button type="button" class="btn remove-wishlist" data-action="remove">Retirer</button>
           </div>
@@ -159,11 +193,6 @@
     }
   </script>
 
-  <!-- =========================================================
-       5) UTILITAIRES DE STOCKAGE (localStorage)
-       - readList / writeList pour lire/écrire une liste
-       - saveToList pour ajouter un item si absent (dé-duplication par id/titre)
-     ========================================================= -->
   <script>
     function readList(key){
       try { return JSON.parse(localStorage.getItem(key)) || []; }
@@ -183,128 +212,126 @@
     }
   </script>
 
-  <!-- =========================================================
-       6) EXTRACTION D'UN ITEM DEPUIS UNE CARTE
-       - Reconstitue un objet item {id,title,image,type,year,genre,synopsis}
-         à partir des attributs data-* de la carte cliquée.
-     ========================================================= -->
   <script>
     function extractItemFromCard(card){
       const get = (name, fallback='') => card.getAttribute(name) || fallback;
-      const type = card.getAttribute('data-type') || 'film';
+      const typeAttr = (card.getAttribute('data-type') || 'film').toLowerCase();
+      const synopsis = get('data-synopsis');
       return {
         id:       get('data-id'),
         title:    get('data-title'),
         image:    get('data-image'),
-        type:     (type === 'Série' ? 'serie' : type).toLowerCase(),
+        type:     typeAttr,
         year:     get('data-annee'),
         genre:    get('data-genre'),
-        synopsis: get('data-synopsis')
+        director: get('data-director'),
+        actors:   get('data-actors'),
+        synopsis,
+        synopsis_short: synopsis
       };
+    }
+
+    async function navigateToCardByElement(cardEl){
+      if (!(cardEl.getAttribute('data-director') || cardEl.getAttribute('data-actors'))) {
+        await hydrateCardIfMissing(cardEl);
+      }
+      const item = extractItemFromCard(cardEl);
+      if (item && item.id) {
+        sessionStorage.setItem('popflix:selected', JSON.stringify({
+          id: item.id,
+          type: item.type === 'serie' ? 'Série' : 'Film',
+          title: item.title,
+          year: item.year,
+          genre: item.genre,
+          synopsis_long: item.synopsis || '',
+          synopsis: item.synopsis || '',
+          director: item.director || '',
+          actors: item.actors || '',
+          poster: item.image || ''
+        }));
+        window.location.href = `carte.html?id=${encodeURIComponent(item.id)}`;
+      }
     }
   </script>
 
-  <!-- =========================================================
-       7) RENDU INITIAL DE LA WISHLIST
-       - Migration légère pour uniformiser l'ancien stockage
-       - Tri alphabétique (A→Z) par titre
-       - Construction et insertion des cartes dans #catalog
-     ========================================================= -->
   <script>
-    (function renderWishlist(){
+    (async function renderWishlist(){
       const catalog = document.getElementById('catalog');
       const key = 'wishlist';
 
-      // Migration : uniformiser anciens objets (type/year)
       const migrated = readList(key).map(it => ({
         id: it.id,
         title: it.title,
-        image: it.image,
+        image: it.image || it.poster || '',
         type: (it.type === 'Série' ? 'serie' : it.type === 'Film' ? 'film' : (it.type || 'film')).toLowerCase(),
         year: it.year || it.annee || '',
         genre: it.genre || '',
-        synopsis: it.synopsis || ''
+        synopsis: it.synopsis || it.synopsis_short || '',
+        synopsis_short: it.synopsis_short || '',
+        director: it.director || '',
+        actors: it.actors || ''
       }));
       writeList(key, migrated);
 
-      // Cas vide
       if (!migrated.length) {
         catalog.innerHTML = "<p>Ta wishlist est vide</p>";
         return;
       }
 
-      // Tri alphabétique A→Z
       catalog.innerHTML = '';
-      migrated.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'fr', { sensitivity: 'base' }));
-
-      // Insertion des cartes
+      migrated.sort((a, b) =>
+        (a.title || '').localeCompare(b.title || '', 'fr', { sensitivity: 'base' })
+      );
       migrated.forEach(item => catalog.appendChild(buildCard(item, { showActions: true })));
-    })();
-  </script>
 
-  <!-- =========================================================
-       8) DÉLÉGATION D'ÉVÉNEMENTS (clics dans #catalog)
-       - Ajouter à la watchlist : feedback vert persistant (is-added)
-       - Retirer de la wishlist : suppression storage + DOM (message si vide)
-     ========================================================= -->
-  <script>
-    document.getElementById('catalog').addEventListener('click', (e) => {
+      const cards = Array.from(document.querySelectorAll('#catalog article.carte'));
+      for (const card of cards) { await hydrateCardIfMissing(card); }
+    })();
+
+    document.getElementById('catalog').addEventListener('click', async (e) => {
       const addBtn = e.target.closest('.add-watchlist');
       const rmBtn  = e.target.closest('.remove-wishlist');
       const cardEl = e.target.closest('article.carte');
       if (!cardEl) return;
 
-      // ▶ Ajouter à la watchlist
       if (addBtn) {
+        await hydrateCardIfMissing(cardEl);
         const item = extractItemFromCard(cardEl);
         const added = saveToList('watchlist', item);
-
-        // Feedback visuel PERSISTANT (pas de timeout)
         addBtn.setAttribute('aria-live','polite');
         addBtn.setAttribute('aria-label', added ? 'Ajouté à la watchlist' : 'Déjà présent dans la watchlist');
         addBtn.textContent = added ? 'Ajouté ✓' : 'Déjà ajouté';
-        addBtn.classList.add('is-added', 'btn-watchlist'); // vert via CSS
-        // Option: empêcher double ajout
-        // addBtn.disabled = added;
+        addBtn.classList.add('is-added', 'btn-watchlist');
         return;
       }
 
-      // ▶ Retirer de la wishlist
       if (rmBtn) {
         const id = cardEl.getAttribute('data-id');
         const list = readList('wishlist').filter(it => it.id !== id);
         writeList('wishlist', list);
-
-        // Retirer visuellement la carte
         cardEl.remove();
-
-        // Message si la liste devient vide
         const catalog = document.getElementById('catalog');
         if (!catalog.querySelector('.carte')) {
           catalog.innerHTML = "<p>Ta wishlist est vide</p>";
         }
         return;
       }
-    });
-  </script>
 
-  <!-- =========================================================
-       9) RECHERCHE TEXTE LOCALE (champ "TITRE")
-       - Filtre en direct les cartes affichées selon le titre
-       - Normalisation des accents pour une recherche plus tolérante
-     ========================================================= -->
-  <script>
+      const clickedInsideCard = e.target.closest('.card');
+      if (clickedInsideCard) {
+        await navigateToCardByElement(cardEl);
+      }
+    });
+
     document.getElementById('q').addEventListener('input', function(){
       const normalize = s => (s || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'');
       const q = normalize(this.value);
-
       document.querySelectorAll('#catalog .carte').forEach(card => {
         const title = normalize(card.getAttribute('data-title'));
         card.style.display = title.includes(q) ? '' : 'none';
       });
     });
 
-    // (optionnel) Bouton "Réinitialiser" : efface le champ + réaffiche tout
     document.getElementById('filters-clear')?.addEventListener('click', () => {
       const qInput = document.getElementById('q');
       if (qInput) {
@@ -314,25 +341,20 @@
       }
     });
   </script>
-</body>
-<footer class="site-footer">
-        <p>
-      <img
-        src="/data/images/TMDb logo.png"
-        alt="TMDb logo"
-        style="height: 30px; vertical-align: middle; margin-right: 8px;"
-      >
+
+  <footer class="site-footer">
+    <p>
+      <img src="./data/images/TMDb logo.png" alt="TMDb logo" style="height: 30px; vertical-align: middle; margin-right: 8px;">
       Ce produit utilise l’API de The Movie Database (TMDb), mais n’est ni approuvé ni certifié par TMDb.
     </p>
-  <div class="footer-content">
-    <p class="footer-text">
-      © 2025 <strong>POPFLIX</strong> — Tous droits réservés
-    </p>
-    <nav class="footer-links">
-      <a href="mentions-legales.html" class="footer-link">Mentions légales</a>
-      <a href="politique-confidentialite.html" class="footer-link">Politique de confidentialité</a>
-      <a href="securite-donnees.html" class="footer-link">Sécurité et protection des données</a>
-    </nav>
-  </div>
-</footer>
+    <div class="footer-content">
+      <p class="footer-text">© 2025 <strong>POPFLIX</strong> — Tous droits réservés</p>
+      <nav class="footer-links">
+        <a href="mentions-legales.html" class="footer-link">Mentions légales</a>
+        <a href="politique-confidentialite.html" class="footer-link">Politique de confidentialité</a>
+        <a href="securite-donnees.html" class="footer-link">Sécurité et protection des données</a>
+      </nav>
+    </div>
+  </footer>
+</body>
 </html>

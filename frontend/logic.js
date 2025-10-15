@@ -1,8 +1,8 @@
 /* =========================================================
-   LOGIC.JS — Logique de la bibliothèque POPFLIX
+   LOGIC.JS — Logique de la bibliothèque POPFLIX (enrichi)
    - Chargement CSV
    - Requêtes TMDb pour les affiches
-   - Rendu des cartes
+   - Rendu des cartes (avec réalisateur/acteurs/synopsis court)
    - Filtres + tri A→Z
    - Ajout à watchlist / wishlist (localStorage)
    ========================================================= */
@@ -10,14 +10,13 @@
 /* =========================
    0) CONSTANTES TMDb + ASSETS
    ========================= */
-const TMDB_KEY  = "186e91ca5cf68f37adff53da8ea51136";
+const TMDB_KEY  = "186e91ca5cf68f37adff53da8ea51136"; // ⚠️ idéalement via backend proxy
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const TMDB_IMG  = "https://image.tmdb.org/t/p/w500";
 const PLACEHOLDER = "/data/images/placeholder_poster.png";
 
 /* =========================
    1) ÉTAT GLOBAL EN MÉMOIRE
-   - items : liste des contenus chargés depuis le CSV
    ========================= */
 let items = []; // rempli après lecture du CSV
 
@@ -32,9 +31,6 @@ const GENRES = [
 
 /* =========================================================
    3) NORMALISATIONS & TRANSFORMATIONS
-   - toFrType : "film"/"serie" -> "Film"/"Série"
-   - isBad    : détecte une valeur vide/non exploitable
-   - norm     : normalise texte (minuscule + sans accent)
    ========================================================= */
 const toFrType = (t) => {
   const v = (t || "").toString().toLowerCase().trim();
@@ -53,8 +49,6 @@ const norm = s =>
 
 /* =========================================================
    4) APPELS TMDb (recherche d’affiches)
-   - tmdbSearchPoster : cherche une affiche via /search/movie|tv
-   - cache localStorage simple pour éviter de re-querier
    ========================================================= */
 async function tmdbSearchPoster(title, year, isTv) {
   const kind = isTv ? "tv" : "movie";
@@ -91,9 +85,7 @@ function cacheGet(key) { try { return JSON.parse(localStorage.getItem(key) || "n
 function cacheSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
 
 /* =========================================================
-   5) MAPPING DU CSV -> MODÈLE INTERNE
-   - ensureId : f001/s001 auto si id manquant
-   - mapRow   : normalise chaque ligne du CSV en item
+   5) MAPPING DU CSV -> MODÈLE INTERNE (ENRICHI)
    ========================================================= */
 function ensureId(row, counters) {
   const raw = (row.id || "").toString().trim();
@@ -111,14 +103,19 @@ function mapRow(row, counters) {
     year: Number(row.year) || "",
     type: toFrType(row.type), // "Film" | "Série"
     genre: (row.genre || "").toString().trim(),
-    synopsis: (row.synopsis || "").toString().trim(),
+
+    // Nouveaux champs : on privilégie synopsis_long puis synopsis classique
+    synopsis_long: (row.synopsis_long || row.synopsis || "").toString().trim(),
+    synopsis_short: (row.synopsis_short || "").toString().trim(),
+    director: (row.director || "").toString().trim(),
+    actors: (row.actors || "").toString().trim(),
+
     state: (row.state || "").toString().trim() || undefined,
   };
 }
 
 /* =========================================================
    6) OUTILS LIÉS AU GENRE
-   - getItemGenres : "Action, Drame" -> ["action","drame"] normalisés
    ========================================================= */
 function getItemGenres(it) {
   const raw = (it.genre || "").toString();
@@ -130,11 +127,7 @@ function getItemGenres(it) {
 }
 
 /* =========================================================
-   7) RENDU DES CARTES
-   - cleanPoster  : sécurise l’URL de l’affiche (+ placeholder)
-   - toCardHTML   : génère le HTML d’une carte
-   - sortAlphabetically : tri A→Z par titre
-   - renderCards  : injecte les cartes triées dans #catalog
+   7) RENDU DES CARTES (ENRICHI)
    ========================================================= */
 function cleanPoster(url) {
   let u = (url || "").toString().trim();
@@ -144,18 +137,18 @@ function cleanPoster(url) {
   return u;
 }
 
+function toCardHTML(item) {
+  const poster   = cleanPoster(item.poster);
+  const title    = (item.title || "").toString().trim();
+  const typeFr   = (item.type || "").toString().trim();  // "Film" | "Série"
+  const isSerie  = typeFr.toLowerCase().startsWith('s');
+  const type     = isSerie ? 'serie' : 'film';
+  const year     = item.year || "";
+  const genre    = (item.genre || "").toString().trim();
 
-  function toCardHTML(item) {
-    const poster   = cleanPoster(item.poster);
-    const title    = (item.title || "").toString().trim();
-    const typeFr   = (item.type || "").toString().trim();  // "Film" | "Série"
-    const isSerie  = typeFr.toLowerCase().startsWith('s');
-    const type     = isSerie ? 'serie' : 'film';            // normalisé pour data/class
-    const year     = item.year || "";
-    const genre    = (item.genre || "").toString().trim();
-    const synopsis = (item.synopsis || "").toString().trim();
-
-
+  const synopsisShort = (item.synopsis_short || item.synopsis || "").toString().trim();
+  const director = (item.director || "").toString().trim();
+  const actors = (item.actors || "").toString().trim();
 
   return `
     <article class="carte ${type}" data-type="${type}">
@@ -174,12 +167,11 @@ function cleanPoster(url) {
           <div class="container"><span class="type">${isSerie ? 'Série' : 'Film'}</span></div>
           <h3 class="title">${title}</h3>
           <ul class="meta">
-            ${year  ? `<li class="year">${year}</li>`   : ''}
-            ${genre ? `<li class="genre">${genre}</li>` : ''}
+            ${year     ? `<li class="year">${year}</li>`   : ''}
+            ${genre    ? `<li class="genre">${genre}</li>` : ''}
           </ul>
-          ${synopsis ? `
-            <div class="synopsis-label">Synopsis :</div>
-            <div class="synopsis">${synopsis}</div>
+          ${synopsisShort ? `
+            <div class="synopsis">${synopsisShort}</div>
           ` : ''}
         </div>
       </div>
@@ -208,8 +200,6 @@ function renderCards(list) {
 
 /* =========================================================
    8) FILTRES (état + application)
-   - filterState : type/statut/genre/texte
-   - applyFilters: applique les filtres + tri A→Z -> renderCards
    ========================================================= */
 const filterState = {
   type: null,          // "series" | "films" | null
@@ -239,8 +229,11 @@ function applyFilters() {
       const itemGenres = getItemGenres(it);
       if (!itemGenres.includes(g)) return false;
     }
-    // TITRE
-    if (q && !norm(it.title).includes(q)) return false;
+    // TITRE (ou recherche plein texte simple)
+    if (q) {
+      const hay = [it.title, it.genre, it.director, it.actors].map(x => norm(x)).join(" ");
+      if (!hay.includes(q)) return false;
+    }
 
     return true;
   });
@@ -253,18 +246,15 @@ function applyFilters() {
 
 /* =========================================================
    9) LISTES LOCALES (watchlist / wishlist)
-   - saveToList      : ajoute si absent (clé: id ou titre)
-   - setButtonLabel  : utilitaire UI
-   - onCatalogClick  : gestion des clics "Ajouter à ..."
    ========================================================= */
 function saveToList(listName, item) {
   try {
     const list = JSON.parse(localStorage.getItem(listName) || '[]');
-    const norm = s => (s||'').toString().trim().toLowerCase()
+    const normf = s => (s||'').toString().trim().toLowerCase()
       .normalize('NFD').replace(/\p{Diacritic}/gu,''); // casse + accents
     const exists = list.some(i => {
       if (i.id && item.id) return i.id === item.id;     // priorité à l'ID
-      return norm(i.title) === norm(item.title);        // fallback titre
+      return normf(i.title) === normf(item.title);      // fallback titre
     });
     if (exists) return false;
     list.push(item);
@@ -272,7 +262,6 @@ function saveToList(listName, item) {
     return true;
   } catch { return false; }
 }
-
 
 function setButtonLabel(el, text) {
   if (!el) return;
@@ -308,7 +297,10 @@ function onCatalogClick(e) {
       type: (item.type || '').toLowerCase().startsWith('s') ? 'serie' : 'film',
       year: item.year || '',
       genre: item.genre || '',
-      synopsis: item.synopsis || ''
+      synopsis: item.synopsis || '',
+      synopsis_short: item.synopsis_short || '',
+      director: item.director || '',
+      actors: item.actors || ''
     };
 
     const key = btn.classList.contains('btn-wishlist') ? 'wishlist' : 'watchlist';
@@ -325,24 +317,44 @@ function onCatalogClick(e) {
       btn.setAttribute('aria-label', 'Déjà présent dans la liste');
     }
 
-    // relâche le verrou (évite le spam de clics)
     setTimeout(() => { btn.dataset.lock = '0'; }, 350);
     return;
   }
 
-  // navigation si clic ailleurs sur la carte
+  // === Navigation si clic ailleurs sur la carte ===
   const card = e.target.closest('.card[data-id]');
   if (!card) return;
+
   const id = card.dataset.id;
   if (!id) return;
-  window.location.href = `/carte.html?id=${encodeURIComponent(id)}`;
+
+  // 1) Récupère l’item correspondant
+  const item = items.find(it => it.id === id);
+  if (item) {
+  const payload = {
+    id: item.id,
+    type: item.type,
+    title: item.title,
+    year: item.year,
+    genre: item.genre,
+    synopsis_long: item.synopsis_long || item.synopsis || "",
+    synopsis_short: item.synopsis_short || "",
+    synopsis: item.synopsis || "", // compat si d'autres scripts lisent "synopsis"
+    director: item.director || "",
+    actors: item.actors || "",
+    poster: cleanPoster(item.poster) || PLACEHOLDER
+  };
+
+  sessionStorage.setItem('popflix:selected', JSON.stringify(payload));
 }
 
 
+  // 3) Redirection (chemin RELATIF)
+  window.location.href = `carte.html?id=${encodeURIComponent(id)}`;
+}
+
 /* =========================================================
    10) FILTRES (UI) — câblage des <select> et <input>
-   - populateGenreSelect : remplit le select des genres
-   - initFilters         : abonne les listeners + bouton reset
    ========================================================= */
 function populateGenreSelect(){
   const sel = document.getElementById("genre-select");
@@ -416,10 +428,10 @@ function initFilters() {
   }
 }
 
+
+
 /* =========================================================
    11) BOOTSTRAP : chargement CSV + hydratation affiches
-   - loadCSVAndBoot : charge CSV, mappe items, rend avec placeholders,
-                      hydrate affiches TMDb (concurrence), puis applique filtres
    ========================================================= */
 async function loadCSVAndBoot() {
   const csvUrl = "/data/base_de_donnees/films_series_200_filled.csv";
@@ -453,8 +465,6 @@ async function loadCSVAndBoot() {
 
 /* =========================================================
    12) INITIALISATION AU CHARGEMENT DE LA PAGE
-   - branche le handler de clics sur #catalog
-   - ne boote la biblio que si on est sur la page correspondante
    ========================================================= */
 document.addEventListener("DOMContentLoaded", () => {
   const catalog = document.getElementById('catalog');
@@ -467,8 +477,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /* =========================================================
    13) HYDRATATION ASYNCHRONE DES AFFICHES (TMDb)
-   - hydratePosters : workers concurrents qui remplissent item.poster
-                      + cache localStorage pour éviter les re-queries
    ========================================================= */
 async function hydratePosters(list, concurrency = 6) {
   const queue = [...list];

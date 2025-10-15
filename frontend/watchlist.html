@@ -14,12 +14,11 @@
 </head>
 
 <body data-page="watchlist">
-  <!-- Top bar -->
   <header class="topbar">
     <div class="brand">
       <div class="logo">
         <span>POPFLIX</span>
-        <img src="/data/images/logo_popflix.png" alt="Logo POPFLIX" class="logo-img">
+        <img src="./data/images/logo_popflix.png" alt="Logo POPFLIX" class="logo-img">
       </div>
       <div class="slogan">LE POPCORN DU BINGE-WATCH</div>
     </div>
@@ -34,12 +33,10 @@
     </nav>
   </header>
 
-  <!-- Filtres -->
   <section class="filters" id="filters">
     <h2>ma watchlist</h2>
 
     <div class="filters-right">
-      <!-- TYPE -->
       <div class="filter-group">
         <button class="filtre" type="button" tabindex="-1" aria-hidden="true">TYPE</button>
         <select id="type-select" class="select">
@@ -49,13 +46,11 @@
         </select>
       </div>
 
-      <!-- GENRE -->
       <div class="filter-group">
         <button class="filtre" type="button" tabindex="-1" aria-hidden="true">GENRE</button>
         <select id="genre-select" class="select"></select>
       </div>
 
-      <!-- STATUT -->
       <div class="filter-group">
         <button class="filtre" type="button" tabindex="-1" aria-hidden="true">STATUT</button>
         <select id="statut-select" class="select">
@@ -65,7 +60,6 @@
         </select>
       </div>
 
-      <!-- TITRE -->
       <div class="filter-group">
         <button class="filtre" type="button" tabindex="-1" aria-hidden="true">TITRE</button>
         <input id="q" class="input" type="text" placeholder="Rechercher un titre…" />
@@ -73,8 +67,84 @@
       </div>
     </div>
   </section>
-  <!-- Conteneur des cartes -->
+
   <section id="catalog" class="grid"></section>
+
+  <!-- ===== Constantes TMDb + helpers ===== -->
+  <script>
+    const PLACEHOLDER = "./data/images/placeholder_poster.png";
+    const TMDB_KEY  = "186e91ca5cf68f37adff53da8ea51136";
+    const TMDB_BASE = "https://api.themoviedb.org/3";
+
+    async function tmdbSearchId(title, year, isTv){
+      const kind = isTv ? "tv" : "movie";
+      const p = new URLSearchParams({
+        api_key: TMDB_KEY, language: "fr-FR", query: title || "", include_adult: "false"
+      });
+      if (year && /^\d{4}$/.test(String(year))) {
+        p.set(isTv ? "first_air_date_year" : "year", String(year));
+      }
+      const r = await fetch(`${TMDB_BASE}/search/${kind}?${p}`);
+      const j = r.ok ? await r.json() : null;
+      return j?.results?.[0]?.id || null;
+    }
+
+    async function tmdbCredits(kind, id){
+      try{
+        // TV: aggregate_credits donne un meilleur cast
+        const endpoint = kind === "tv" ? "aggregate_credits" : "credits";
+        const r = await fetch(`${TMDB_BASE}/${kind}/${id}/${endpoint}?api_key=${TMDB_KEY}&language=fr-FR`);
+        const j = r.ok ? await r.json() : null;
+        if (!j) return { director: "", actors: "" };
+
+        let director = "";
+        if (j.crew?.length){
+          // films: job === "Director", TV: parfois "Director" par épisode – on regroupe
+          const dirs = j.crew.filter(c => (c.job === "Director" || c.jobs?.some?.(jj => jj.job === "Director"))).map(c=>c.name);
+          director = [...new Set(dirs)].slice(0,3).join(", ");
+        }
+        let actors = "";
+        if (Array.isArray(j.cast)){
+          // TV aggregate: cast[].roles ; Movie: cast[].character
+          actors = j.cast.map(c => c.name).slice(0,5).join(", ");
+        }
+        return { director, actors };
+      }catch{ return { director:"", actors:"" }; }
+    }
+
+    async function hydrateCardIfMissing(cardEl){
+      const hasDirector = (cardEl.getAttribute('data-director') || "").trim();
+      const hasActors   = (cardEl.getAttribute('data-actors') || "").trim();
+      if (hasDirector && hasActors) return; // déjà ok
+
+      const title = cardEl.getAttribute('data-title') || "";
+      const year  = cardEl.getAttribute('data-annee') || "";
+      const type  = (cardEl.getAttribute('data-type') || 'film').toLowerCase();
+      const isTv  = (type === 'serie');
+
+      const id = await tmdbSearchId(title, year, isTv);
+      if (!id) return;
+
+      const { director, actors } = await tmdbCredits(isTv ? "tv" : "movie", id);
+      if (!(director || actors)) return;
+
+      // maj DOM (data-*) pour l’extract + affichage si besoin
+      if (director) cardEl.setAttribute('data-director', director);
+      if (actors)   cardEl.setAttribute('data-actors', actors);
+
+      // mettre à jour l’objet dans localStorage (persistance)
+      try{
+        const list = JSON.parse(localStorage.getItem('watchlist') || '[]');
+        const elId = cardEl.getAttribute('data-id');
+        const idx = list.findIndex(it => it.id === elId);
+        if (idx >= 0){
+          list[idx].director = list[idx].director || director;
+          list[idx].actors   = list[idx].actors   || actors;
+          localStorage.setItem('watchlist', JSON.stringify(list));
+        }
+      }catch{}
+    }
+  </script>
 
   <!-- ===== Constructeur de carte + actions ===== -->
   <script>
@@ -84,46 +154,45 @@
       el.className = 'carte ' + (isSerie ? 'serie' : 'film');
       el.setAttribute('data-type', isSerie ? 'serie' : 'film');
 
-      // Attributs data-* utiles pour extraire l’item depuis le DOM
+      // data-* complets
       el.setAttribute('data-id', item.id || '');
       el.setAttribute('data-title', item.title || '');
-      el.setAttribute('data-image', item.image || '');
+      el.setAttribute('data-image', item.image || item.poster || '');
       el.setAttribute('data-genre', item.genre || '');
-      el.setAttribute('data-synopsis', item.synopsis || '');
       el.setAttribute('data-annee', item.year || item.annee || '');
+      el.setAttribute('data-director', item.director || '');
+      el.setAttribute('data-actors',  item.actors  || '');
+      el.setAttribute('data-synopsis', item.synopsis || item.synopsis_short || '');
 
       const title = item.title || 'Sans titre';
-      const poster = item.image || '';
+      const poster = (item.image || item.poster || '').trim() || PLACEHOLDER;
       const typeLabel = isSerie ? 'Série' : 'Film';
       const annee = item.year || item.annee || '';
       const genre = item.genre || '';
-      const synopsis = item.synopsis || '';
+      const synopsis_short = item.synopsis_short || item.synopsis || '';
 
       el.innerHTML = `
         <div class="card" data-id="${item.id || ''}">
           <div class="poster">
-            <img class="poster-img" src="${poster}" alt="${title}">
+            <img class="poster-img" src="${poster}" alt="${title}"
+                 loading="lazy" decoding="async"
+                 onerror="this.onerror=null; this.src='${PLACEHOLDER}';">
           </div>
-
           <div class="card-body">
             <div class="container"><span class="type">${typeLabel}</span></div>
             <h3 class="title">${title}</h3>
-
             <ul class="meta">
               ${annee ? `<li class="year">${annee}</li>` : ''}
               ${genre ? `<li class="genre">${genre}</li>` : ''}
             </ul>
-
-            ${synopsis ? `
+            ${synopsis_short ? `
               <div class="synopsis-label">Synopsis</div>
-              <p class="synopsis">${synopsis}</p>
+              <p class="synopsis">${synopsis_short}</p>
             ` : ''}
           </div>
         </div>
-
         ${showActions ? `
           <div class="boutons">
-            <!-- IMPORTANT: classe btn-wishlist pour hériter du style vert .is-added comme sur la biblio -->
             <button type="button" class="btn btn-wishlist add-wishlist" data-action="add-wishlist">Ajouter à ma wishlist</button>
             <button type="button" class="btn remove-watchlist" data-action="remove">Retirer</button>
           </div>
@@ -135,7 +204,6 @@
 
   <!-- ===== Logique locale : storage, rendu, clics ===== -->
   <script>
-    // Helpers storage
     function readList(key){ try{ return JSON.parse(localStorage.getItem(key)) || []; }catch{ return []; } }
     function writeList(key, arr){ try{ localStorage.setItem(key, JSON.stringify(arr)); }catch{} }
 
@@ -148,34 +216,62 @@
       return true;
     }
 
-    // Extraire un item complet depuis une carte
     function extractItemFromCard(card){
       const get = (name, fallback='') => card.getAttribute(name) || fallback;
-      const type = card.getAttribute('data-type') || 'film';
+      const typeAttr = (card.getAttribute('data-type') || 'film').toLowerCase();
+      const synopsis = get('data-synopsis');
       return {
         id:       get('data-id'),
         title:    get('data-title'),
         image:    get('data-image'),
-        type:     (type === 'Série' ? 'serie' : type).toLowerCase(),
+        type:     typeAttr,
         year:     get('data-annee'),
         genre:    get('data-genre'),
-        synopsis: get('data-synopsis')
+        director: get('data-director'),
+        actors:   get('data-actors'),
+        synopsis,
+        synopsis_short: synopsis
       };
     }
 
-    // Rendu initial (+ migration légère pour compatibilité)
-    (function renderWatchlist(){
+    async function navigateToCardByIdFromElement(cardEl){
+      // si director/actors manquent → hydrate depuis TMDb avant de partir
+      if (!(cardEl.getAttribute('data-director') || cardEl.getAttribute('data-actors'))) {
+        await hydrateCardIfMissing(cardEl);
+      }
+      const item = extractItemFromCard(cardEl);
+      if (item && item.id) {
+        sessionStorage.setItem('popflix:selected', JSON.stringify({
+          id: item.id,
+          type: item.type === 'serie' ? 'Série' : 'Film',
+          title: item.title,
+          year: item.year,
+          genre: item.genre,
+          synopsis_long: item.synopsis || '',
+          synopsis: item.synopsis || '',
+          director: item.director || '',
+          actors: item.actors || '',
+          poster: item.image || ''
+        }));
+        window.location.href = `carte.html?id=${encodeURIComponent(item.id)}`;
+      }
+    }
+
+    (async function renderWatchlist(){
       const catalog = document.getElementById('catalog');
       const key = 'watchlist';
 
       const migrated = readList(key).map(it => ({
         id: it.id,
         title: it.title,
-        image: it.image,
+        image: it.image || it.poster || '',
         type: (it.type === 'Série' ? 'serie' : it.type === 'Film' ? 'film' : (it.type || 'film')).toLowerCase(),
         year: it.year || it.annee || '',
         genre: it.genre || '',
-        synopsis: it.synopsis || ''
+        synopsis: it.synopsis || it.synopsis_short || '',
+        synopsis_short: it.synopsis_short || '',
+        director: it.director || '',
+        actors: it.actors || ''
       }));
       writeList(key, migrated);
 
@@ -183,47 +279,40 @@
         catalog.innerHTML = "<p>Aucun film ou série dans ta watchlist</p>";
         return;
       }
+
       catalog.innerHTML = '';
-      if (!migrated.length) {
-  catalog.innerHTML = "<p>Aucun film ou série dans ta watchlist</p>";
-  return;
-}
-
-catalog.innerHTML = '';
-migrated.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'fr', { sensitivity: 'base' }));
-migrated.forEach(item => catalog.appendChild(buildCard(item, { showActions: true })));
-
+      migrated.sort((a, b) =>
+        (a.title || '').localeCompare(b.title || '', 'fr', { sensitivity: 'base' })
+      );
       migrated.forEach(item => catalog.appendChild(buildCard(item, { showActions: true })));
+
+      // hydration TMDb pour les anciens items incomplets
+      const cards = Array.from(document.querySelectorAll('#catalog article.carte'));
+      for (const card of cards) { await hydrateCardIfMissing(card); }
     })();
 
-    // Délégation des clics sur le catalogue
-    document.getElementById('catalog').addEventListener('click', (e) => {
+    document.getElementById('catalog').addEventListener('click', async (e) => {
       const addBtn = e.target.closest('.add-wishlist');
       const rmBtn  = e.target.closest('.remove-watchlist');
       const cardEl = e.target.closest('article.carte');
       if (!cardEl) return;
 
-      // Ajouter à la wishlist (feedback vert persistant)
       if (addBtn) {
+        // S’assurer d’ajouter un item enrichi
+        await hydrateCardIfMissing(cardEl);
         const item = extractItemFromCard(cardEl);
         const added = saveToList('wishlist', item);
-
         addBtn.setAttribute('aria-live','polite');
         addBtn.setAttribute('aria-label', added ? 'Ajouté à la wishlist' : 'Déjà présent dans la wishlist');
         addBtn.textContent = added ? 'Ajouté ✓' : 'Déjà ajouté';
-        addBtn.classList.add('is-added', 'btn-wishlist'); // vert + persistant
-        // Option: empêcher double ajout
-        // addBtn.disabled = added;
-
+        addBtn.classList.add('is-added', 'btn-wishlist');
         return;
       }
 
-      // Retirer de la watchlist
       if (rmBtn) {
         const id = cardEl.getAttribute('data-id');
         const list = readList('watchlist').filter(it => it.id !== id);
         writeList('watchlist', list);
-
         cardEl.remove();
         const catalog = document.getElementById('catalog');
         if (!catalog.querySelector('.carte')) {
@@ -231,9 +320,13 @@ migrated.forEach(item => catalog.appendChild(buildCard(item, { showActions: true
         }
         return;
       }
+
+      const clickedInsideCard = e.target.closest('.card');
+      if (clickedInsideCard) {
+        await navigateToCardByIdFromElement(cardEl);
+      }
     });
 
-    // (facultatif) petit filtre texte local sur le titre
     document.getElementById('q').addEventListener('input', function(){
       const q = (this.value || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'');
       document.querySelectorAll('#catalog .carte').forEach(card=>{
@@ -241,26 +334,30 @@ migrated.forEach(item => catalog.appendChild(buildCard(item, { showActions: true
         card.style.display = title.includes(q) ? '' : 'none';
       });
     });
+
+    document.getElementById('filters-clear').addEventListener('click', () => {
+      const q = document.getElementById('q');
+      if (q) {
+        q.value = '';
+        const event = new Event('input', { bubbles: true });
+        q.dispatchEvent(event);
+      }
+    });
   </script>
-</body>
+
   <footer class="site-footer">
-        <p>
-      <img
-        src="/data/images/TMDb logo.png"
-        alt="TMDb logo"
-        style="height: 30px; vertical-align: middle; margin-right: 8px;"
-      >
+    <p>
+      <img src="./data/images/TMDb logo.png" alt="TMDb logo" style="height: 30px; vertical-align: middle; margin-right: 8px;">
       Ce produit utilise l’API de The Movie Database (TMDb), mais n’est ni approuvé ni certifié par TMDb.
     </p>
-  <div class="footer-content">
-    <p class="footer-text">
-      © 2025 <strong>POPFLIX</strong> — Tous droits réservés
-    </p>
-    <nav class="footer-links">
-      <a href="mentions-legales.html" class="footer-link">Mentions légales</a>
-      <a href="politique-confidentialite.html" class="footer-link">Politique de confidentialité</a>
-      <a href="securite-donnees.html" class="footer-link">Sécurité et protection des données</a>
-    </nav>
-  </div>
-</footer>
+    <div class="footer-content">
+      <p class="footer-text">© 2025 <strong>POPFLIX</strong> — Tous droits réservés</p>
+      <nav class="footer-links">
+        <a href="mentions-legales.html" class="footer-link">Mentions légales</a>
+        <a href="politique-confidentialite.html" class="footer-link">Politique de confidentialité</a>
+        <a href="securite-donnees.html" class="footer-link">Sécurité et protection des données</a>
+      </nav>
+    </div>
+  </footer>
+</body>
 </html>
