@@ -15,10 +15,86 @@
 
   <!-- CSS principal -->
   <link rel="stylesheet" href="style.css">
+  <!-- CSS chatbot (ajout collègue) -->
+  <link rel="stylesheet" href="chatbot.css">
 
   <!-- Librairies + logique applicative -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" defer></script>
   <script src="/frontend/logic.js" defer></script>
+
+  <!-- Auth & analytics (vos ajouts) -->
+  <script src="auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      logEvent('page_view', { page: location.pathname }); // si connecté, ça s’enregistre
+    });
+  </script>
+
+  <!-- Chart.js pour la courbe (vos ajouts) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Récup métriques + rendu chart (vos ajouts) -->
+  <script>
+    (async function(){
+      const API = window.location.origin;
+
+      function setText(id, val) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+      }
+
+      try {
+        const res = await fetch(`${API}/metrics/summary`, { cache: "no-store" });
+        if (!res.ok) throw new Error("metrics/summary KO");
+        const m = await res.json();
+
+        // Compteurs
+        setText('m-users', m.total_users ?? 0);
+        setText('m-events', m.events_total ?? 0);
+        setText('m-today', m.events_today ?? 0);
+        setText('m-active7', m.active_users_7d ?? 0);
+
+        // Top events (liste)
+        const ul = document.getElementById('m-types');
+        if (ul) {
+          ul.innerHTML = (m.events_by_type || []).map(t =>
+            `<li><strong>${t.event_type}</strong> — ${t.count}</li>`
+          ).join('') || '<li>Aucune donnée pour le moment</li>';
+        }
+
+        // Courbe 7 derniers jours
+        const ctx = document.getElementById('chart-events-7d');
+        if (ctx && Array.isArray(m.events_by_day)) {
+          const byDay = m.events_by_day;
+          const labels = byDay.map(d => d.date);
+          const data = byDay.map(d => d.count);
+
+          new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels,
+              datasets: [{
+                label: 'Événements par jour (7 derniers jours)',
+                data
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: { beginAtZero: true, ticks: { precision: 0 } }
+              },
+              plugins: {
+                legend: { display: false }
+              }
+            }
+          });
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+    })();
+  </script>
 </head>
 
 <body data-page="accueil">
@@ -36,12 +112,20 @@
     </div>
 
     <nav class="main-nav" aria-label="Menu principal">
-      <a class="nav-item" href="index.html">ACCUEIL</a>
-      <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
-      <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
-      <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHÈQUE</a>
-      <a class="nav-item" href="compte.html">MON COMPTE</a>
-      <a class="nav-item" href="contact.html">CONTACT</a>
+      <div class="nav-top">
+        <button id="logout-btn" class="btn-logout" title="Se déconnecter" aria-label="Se déconnecter" hidden>
+          <span class="logout-label">Se déconnecter</span>
+        </button>
+      </div>
+
+      <div class="nav-bottom">
+        <a class="nav-item" href="index.html">ACCUEIL</a>
+        <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
+        <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
+        <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHÈQUE</a>
+        <a class="nav-item" href="compte.html">MON COMPTE</a>
+        <a class="nav-item" href="contact.html">CONTACT</a>
+      </div>
     </nav>
   </header>
 
@@ -51,10 +135,44 @@
       <h1>Bienvenue sur <strong>POPFLIX</strong></h1>
       <p>Découvrez, gérez et partagez vos séries et films favoris.</p>
     </section>
+
+    <!-- Statistiques d’usage (vos ajouts) -->
+    <section class="home-metrics">
+      <h2>Statistiques d’usage</h2>
+      <div class="metrics-cards">
+        <div class="metric"><div class="metric-label">Utilisateurs</div><div id="m-users" class="metric-value">—</div></div>
+        <div class="metric"><div class="metric-label">Événements (total)</div><div id="m-events" class="metric-value">—</div></div>
+        <div class="metric"><div class="metric-label">Aujourd’hui</div><div id="m-today" class="metric-value">—</div></div>
+        <div class="metric"><div class="metric-label">Actifs (7 jours)</div><div id="m-active7" class="metric-value">—</div></div>
+      </div>
+
+      <div class="metrics-charts">
+        <canvas id="chart-events-7d" height="120"></canvas>
+      </div>
+
+      <div class="metrics-types">
+        <h3>Top événements</h3>
+        <ul id="m-types" class="types-list"></ul>
+      </div>
+    </section>
   </main>
-</body>
+
+  <!-- Chatbot flottant (ajout collègue) -->
+  <div id="chatbot-container" class="chatbot-collapsed">
+    <div id="chatbot-header">
+      <span>💬 Chatbot</span>
+      <button id="chatbot-toggle" aria-label="Réduire le chatbot">–</button>
+    </div>
+    <div id="chatbot-body">
+      <div id="chatbot-messages" aria-live="polite"></div>
+      <input id="chatbot-input" type="text" placeholder="Écris ton message..." />
+    </div>
+  </div>
+  <!-- Bouton flottant pour ouvrir/fermer le chatbot -->
+  <button id="chatbot-open-btn" aria-label="Ouvrir le chatbot">💬</button>
+
   <footer class="site-footer">
-        <p>
+    <p>
       <img
         src="/data/images/TMDb logo.png"
         alt="TMDb logo"
@@ -62,15 +180,44 @@
       >
       Ce produit utilise l’API de The Movie Database (TMDb), mais n’est ni approuvé ni certifié par TMDb.
     </p>
-  <div class="footer-content">
-    <p class="footer-text">
-      © 2025 <strong>POPFLIX</strong> — Tous droits réservés
-    </p>
-    <nav class="footer-links">
-      <a href="mentions-legales.html" class="footer-link">Mentions légales</a>
-      <a href="politique-confidentialite.html" class="footer-link">Politique de confidentialité</a>
-      <a href="securite-donnees.html" class="footer-link">Sécurité et protection des données</a>
-    </nav>
-  </div>
-</footer>
+    <div class="footer-content">
+      <p class="footer-text">
+        © 2025 <strong>POPFLIX</strong> — Tous droits réservés
+      </p>
+      <nav class="footer-links">
+        <a href="mentions-legales.html" class="footer-link">Mentions légales</a>
+        <a href="politique-confidentialite.html" class="footer-link">Politique de confidentialité</a>
+        <a href="securite-donnees.html" class="footer-link">Sécurité et protection des données</a>
+      </nav>
+    </div>
+  </footer>
+
+  <!-- Scripts de fin de body -->
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const user = await me();
+        if (user) document.getElementById('logout-btn').hidden = false;
+      } catch (_) {}
+    });
+
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      try {
+        await logout();
+        localStorage.setItem('LOGOUT_BROADCAST', String(Date.now()));
+      } finally {
+        window.location.href = 'compte.html';
+      }
+    });
+
+    window.addEventListener('storage', (ev) => {
+      if (ev.key === 'LOGOUT_BROADCAST') {
+        window.location.href = 'compte.html';
+      }
+    });
+  </script>
+
+  <!-- Chatbot JS (ajout collègue) -->
+  <script src="chatbot.js" defer></script>
+</body>
 </html>

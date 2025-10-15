@@ -78,8 +78,9 @@ html, body {
 
 .main-nav {
   display: flex;
-  gap: 28px;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-end;  /* aligne tout à droite */
+  gap: 10px;
 }
 
 /* Liens du menu */
@@ -89,10 +90,55 @@ html, body {
   font-weight: 700;
   font-size: 22px;
   letter-spacing: 2px;
-  transition: opacity .15s ease-in-out;
+  transition: opacity .15s ease-in-out, transform .15s ease-in-out;
+  white-space: nowrap;
+}
+
+.nav-bottom{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  align-items:center;
+  width:100%;                           /* clé : occupe toute la rangée */
+  gap:32px;                             /* espace entre liens */
+  row-gap:10px;                         /* si ça wrap, espace vertical entre lignes */
+  padding-right:24px;                   /* respiration depuis le bord droit */
+  padding-top:6px;                      /* un peu d’air sous “Se déconnecter” */
 }
 
 .nav-item:hover { opacity: .9; }
+
+.btn-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: #fff;
+  padding: .4rem .7rem;
+  border-radius: 10px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  transition: background 0.2s ease-in-out;
+}
+
+.btn-logout:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.btn-logout .logout-label {
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+@media (max-width: 768px) {
+  .btn-logout .logout-label { display: none; }
+}
+
+
+.logout-label{
+  font-family:'Roboto', sans-serif;
+}
 
 /* Actif selon la page (via body[data-page]) */
 body[data-page="watchlist"]     .nav-item[href*="watchlist"],
@@ -340,7 +386,7 @@ select:focus-visible {
    - Conteneur des cartes
    ============================================================================= */
 
-.grid {
+.library-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 60px 50px;
@@ -838,3 +884,15 @@ iframe[data-tally-src] {
   display: block;
   margin-top: -60px; /* réduit la marge haute visible */
 }
+
+.home-metrics { padding: 1rem; background: #0f0f0f; border-radius: 12px; margin: 1rem 0; }
+.metrics-cards { display: grid; grid-template-columns: repeat(4, minmax(140px, 1fr)); gap: 12px; }
+.metric { background:#161616; border:1px solid #222; padding:12px; border-radius:10px; text-align:center; }
+.metric-label { font-size: .85rem; color:#aaa; }
+.metric-value { font-size: 1.6rem; font-weight:700; }
+.metrics-charts { height: 220px; margin-top: 1rem; background:#161616; border:1px solid #222; border-radius:10px; padding:8px; }
+.types-list { margin-top: .75rem; display:grid; gap:4px; list-style:none; padding-left:0; }
+.types-list li { background:#161616; border:1px solid #222; padding:6px 10px; border-radius:8px; }
+
+.push-right { margin-left: auto; }
+

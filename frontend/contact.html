@@ -9,7 +9,7 @@
      ========================================================= -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>POPFLIX — Ma Wishlist</title>
+  <title>POPFLIX — Contact</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,6 +18,8 @@
 
   <!-- CSS principal -->
   <link rel="stylesheet" href="style.css">
+  <script src="auth.js"></script>
+
 </head>
 
 <body data-page="contact">
@@ -34,14 +36,21 @@
       </div>
       <div class="slogan">LE POPCORN DU BINGE-WATCH</div>
     </div>
-
     <nav class="main-nav" aria-label="Menu principal">
-      <a class="nav-item" href="index.html">ACCUEIL</a>
-      <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
-      <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
-      <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHÈQUE</a>
-      <a class="nav-item" href="compte.html">MON COMPTE</a>
-      <a class="nav-item" href="contact.html">CONTACT</a>
+      <div class="nav-top">
+        <button id="logout-btn" class="btn-logout" title="Se déconnecter" aria-label="Se déconnecter">
+          <span class="logout-label">Se déconnecter</span>
+        </button>
+      </div>
+
+      <div class="nav-bottom">
+        <a class="nav-item" href="index.html">ACCUEIL</a>
+        <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
+        <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
+        <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHÈQUE</a>
+        <a class="nav-item" href="compte.html">MON COMPTE</a>
+        <a class="nav-item" href="contact.html">CONTACT</a>
+      </div>
     </nav>
   </header>
 
@@ -50,8 +59,6 @@
     <div class="formulaire-tally">
         <iframe src="https://tally.so/r/w5ykJZ"></iframe>
     </div>
-  </body>
-
     <footer class="site-footer">
         <p>
       <img
@@ -72,4 +79,28 @@
     </nav>
   </div>
 </footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const user = await me();
+        if (user) document.getElementById('logout-btn').hidden = false;
+      } catch (_) {}
+    });
+
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      try {
+        await logout();
+        localStorage.setItem('LOGOUT_BROADCAST', String(Date.now()));
+      } finally {
+        window.location.href = 'compte.html';
+      }
+    });
+
+    window.addEventListener('storage', (ev) => {
+      if (ev.key === 'LOGOUT_BROADCAST') {
+        window.location.href = 'compte.html';
+      }
+    });
+  </script>
+</body>
 </html>

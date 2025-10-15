@@ -1,20 +1,33 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <!-- =========================================================
+       0) MÉTA + ASSETS GLOBAUX (polices, CSS)
+       - Titre, encodage, viewport
+       - Preconnect + chargement des Google Fonts
+       - Feuille de style principale
+     ========================================================= -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>POPFLIX — Mon compte</title>
+  <title>POPFLIX — Inscription</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
+  <!-- CSS principal -->
   <link rel="stylesheet" href="style.css">
   <script src="auth.js"></script>
+
 </head>
-<body data-page="compte">
-  <!-- Top bar -->
+
+<body data-page="inscription">
+  <!-- =========================================================
+       1) EN-TÊTE (Top bar + Navigation principale)
+       - Logo + slogan
+       - Menu principal (l’état actif est géré via body[data-page])
+     ========================================================= -->
   <header class="topbar">
     <div class="brand">
       <div class="logo">
@@ -41,52 +54,40 @@
     </nav>
   </header>
 
-  <main class="account" role="main">
+  <body>
+<main class="account" role="main">
     <section class="auth-card" aria-labelledby="authTitle">
       <header class="auth-header">
-        <h1 id="authTitle">Mon compte</h1>
-        <!-- S'inscrire (desktop) : accent -->
-        <a class="btn btn--accent signup-desktop" href="inscription.html">S’inscrire</a>
+        <h1 id="authTitle">Créer un compte</h1>
+        <a class="btn btn--accent signup-desktop" href="compte.html">Se connecter</a>
       </header>
 
-      <!-- NOTE : l'action/method restent, mais on intercepte en JS -->
-      <form class="auth-form" action="/login" method="post" novalidate id="login-form">
+      <form class="auth-form" id="register-form" novalidate>
         <div class="field">
-          <label for="login">Nom d’utilisateur ou e-mail</label>
-          <input id="login" name="login" type="text" autocomplete="username" required>
+          <label for="r-email">Adresse e-mail</label>
+          <input id="r-email" name="email" type="email" autocomplete="email" required>
         </div>
 
         <div class="field">
-          <label for="password">Mot de passe</label>
-          <input id="password" name="password" type="password" autocomplete="current-password" required>
+          <label for="r-password">Mot de passe</label>
+          <input id="r-password" name="password" type="password" autocomplete="new-password" required>
         </div>
 
-        <!-- Ajout léger : rester connecté -->
-        <div class="field" style="display:flex;align-items:center;gap:.5rem;">
-          <input type="checkbox" id="remember" checked>
-          <label for="remember" style="margin:0;">Rester connecté</label>
-        </div>
+        <p id="register-error" class="form-error" role="alert" aria-live="polite" style="min-height:1.2em;color:#e53935;"></p>
 
-        <!-- Zone d'erreur discrète -->
-        <p id="auth-error" class="form-error" role="alert" aria-live="polite" style="min-height:1.2em;color:#e53935;"></p>
+        <button class="btn auth-submit" type="submit">Créer mon compte</button>
 
-        <button class="btn auth-submit" type="submit">Valider</button>
-
-        <p class="link-row">
-          <a class="text-link" href="mot-de-passe-oublie.html">Mot de passe oublié&nbsp;?</a>
-        </p>
-
-        <!-- S'inscrire (mobile) -->
         <div class="alt-action">
-          <span>Pas encore de compte&nbsp;?</span>
-          <a class="btn btn--accent" href="inscription.html">S’inscrire</a>
+          <span>Déjà inscrit&nbsp;?</span>
+          <a class="btn btn--accent" href="compte.html">Se connecter</a>
         </div>
       </form>
     </section>
   </main>
 
-  <footer class="site-footer">
-    <p>
+
+    <footer class="site-footer">
+        <p>
       <img
         src="/data/images/TMDb logo.png"
         alt="TMDb logo"
@@ -94,52 +95,46 @@
       >
       Ce produit utilise l’API de The Movie Database (TMDb), mais n’est ni approuvé ni certifié par TMDb.
     </p>
-    <div class="footer-content">
-      <p class="footer-text">
-        © 2025 <strong>POPFLIX</strong> — Tous droits réservés
-      </p>
-      <nav class="footer-links">
-        <a href="mentions-legales.html" class="footer-link">Mentions légales</a>
-        <a href="politique-confidentialite.html" class="footer-link">Politique de confidentialité</a>
-        <a href="securite-donnees.html" class="footer-link">Sécurité et protection des données</a>
-      </nav>
-    </div>
-  </footer>
-
-  <!-- Script minimal pour brancher le formulaire à auth.js -->
-  <script>
-    // Trace l'ouverture de la page s'il y a un token valable
+  <div class="footer-content">
+    <p class="footer-text">
+      © 2025 <strong>POPFLIX</strong> — Tous droits réservés
+    </p>
+    <nav class="footer-links">
+      <a href="mentions-legales.html" class="footer-link">Mentions légales</a>
+      <a href="politique-confidentialite.html" class="footer-link">Politique de confidentialité</a>
+      <a href="securite-donnees.html" class="footer-link">Sécurité et protection des données</a>
+    </nav>
+  </div>
+</footer>
+<script>
     document.addEventListener('DOMContentLoaded', () => {
-      // logEvent n'enverra quelque chose que si l'utilisateur est (ou devient) authentifié
       if (typeof logEvent === 'function') {
         logEvent('page_view', { page: location.pathname });
       }
     });
 
-    const form = document.getElementById('login-form');
-    const errorEl = document.getElementById('auth-error');
+    const form = document.getElementById('register-form');
+    const errorEl = document.getElementById('register-error');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       errorEl.textContent = '';
 
-      const emailOrUser = document.getElementById('login').value.trim();
-      const password = document.getElementById('password').value;
-      const remember = document.getElementById('remember').checked;
+      const email = document.getElementById('r-email').value.trim();
+      const password = document.getElementById('r-password').value;
 
       try {
-        // Le backend attend un email : on passe la valeur telle quelle
-        await login(emailOrUser, password, remember);
+        await register(email, password);
         if (typeof logEvent === 'function') {
-          await logEvent('login_success', { page: location.pathname });
+          await logEvent('register_success', { page: location.pathname });
         }
-        // Redirection après succès
-        window.location.href = 'index.html';
+        alert('Compte créé avec succès ! Connecte-toi maintenant.');
+        window.location.href = 'compte.html';
       } catch (err) {
         if (typeof logEvent === 'function') {
-          await logEvent('login_failed', { reason: 'bad_credentials' });
+          await logEvent('register_failed', {});
         }
-        errorEl.textContent = 'Identifiants invalides. Réessaie.';
+        errorEl.textContent = 'Impossible de créer le compte (email déjà utilisé ?).';
       }
     });
   </script>

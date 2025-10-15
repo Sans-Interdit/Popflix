@@ -1,5 +1,5 @@
 // ===============================
-// POPFLIX — carte.js (corrigé + enrichi)
+// POPFLIX — carte.js (fusion: watchlist/wishlist + épisodes + merge sûr)
 // ===============================
 
 // ----- Étoiles / états boutons -----
@@ -14,12 +14,12 @@ const watchedBtn  = document.querySelector(".watched-btn");
 const watchedText = watchedBtn ? watchedBtn.querySelector(".watched-text") : null;
 let isWatched = false;
 
-const wishedState = { false: "Ajouter à la wishlist", true: "☑ Dans votre wishlist" };
+const wishedState  = { false: "Ajouter à la wishlist", true: "☑ Dans votre wishlist" };
 const watchedState = { false: "J'ai vu cette œuvre",   true: "☑ Œuvre regardée !" };
 
 const appState = {
-  oeuvre: null,
-  episodesWatched: []
+  oeuvre: null,          // { id, type, title, release_date, genres, overview, director, actors, poster, number_of_episodes }
+  episodesWatched: []    // [bool] pour séries
 };
 
 // ----- Helpers DOM -----
@@ -36,7 +36,7 @@ function renderOeuvre(o) {
   setText('[data-field="genres"]',       o.genres || "");
   // Overview = synopsis long prioritaire / fallback synopsis / overview API
   setText('[data-field="overview"]',     o.overview || o.synopsis_long || o.synopsis || "");
-  // Nouveaux champs
+  // Champs enrichis
   setText('[data-field="director"]',     o.director || "");
   setText('[data-field="actors"]',       o.actors || "");
 }
@@ -89,15 +89,105 @@ function mapToOeuvre(src) {
     synopsis_short: src.synopsis_short || "",
     director: src.director || "",
     actors: src.actors || "",
-    poster: src.poster || ""
+    poster: src.poster || "",
+    number_of_episodes: src.number_of_episodes || 0
   };
 }
 
+// Merge qui évite d’écraser par des valeurs vides
+function mergeNonEmpty(base, incoming) {
+  const clean = Object.fromEntries(
+    Object.entries(incoming || {}).filter(([, v]) => v !== undefined && v !== null && v !== "")
+  );
+  return { ...base, ...clean };
+}
+
+// ======= LocalStorage helpers =======
+function readList(key){ try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; } }
+function writeList(key, arr){ try { localStorage.setItem(key, JSON.stringify(arr)); } catch {} }
+function normKey(s){
+  try {
+    return (s || '')
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  } catch {
+    return (s || '').toString().toLowerCase().trim();
+  }
+}
+
+// Construit un item watchlist depuis l'écran
+function buildWatchlistItem(defaultState = "not_started") {
+  const o = appState.oeuvre || {};
+  const posterEl = document.getElementById('poster');
+  const posterSrc = posterEl?.getAttribute('src') || o.poster || "";
+  const isSerie = (o.type || "").toLowerCase().startsWith('s');
+  return {
+    id: o.id || undefined,
+    title: o.title || "",
+    image: posterSrc,
+    poster: posterSrc, // compat
+    type: isSerie ? 'serie' : 'film',
+    year: o.release_date || "",
+    genre: o.genres || "",
+    synopsis: o.overview || "",
+    synopsis_short: o.synopsis_short || "",
+    director: o.director || "",
+    actors: o.actors || "",
+    state: defaultState // "not_started" | "done"
+  };
+}
+
+// Upsert dans une liste (watchlist/wishlist) en forçant un state
+function upsertWithState(listName, item, forcedState){
+  const list = readList(listName);
+  const byIdIndex = item.id ? list.findIndex(i => i.id === item.id) : -1;
+  const titleIndex = byIdIndex === -1 ? list.findIndex(i => normKey(i.title) === normKey(item.title)) : -1;
+
+  const base = { ...item, state: forcedState };
+  if (byIdIndex >= 0) {
+    list[byIdIndex] = { ...list[byIdIndex], ...base };
+  } else if (titleIndex >= 0) {
+    list[titleIndex] = { ...list[titleIndex], ...base };
+  } else {
+    list.push(base);
+  }
+  writeList(listName, list);
+}
+
+// ======= Persistance d'état (boutons + étoiles) =======
+function stateStorageKey(){
+  const o = appState.oeuvre || {};
+  const type = (o.type || 'unknown').toLowerCase();
+  return o.id ? `mediaState:${type}:${o.id}` : 'mediaState:global';
+}
+
+function loadUIState(){
+  try {
+    const raw = localStorage.getItem(stateStorageKey());
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    if (typeof s.isWatched !== 'undefined') isWatched = !!s.isWatched;
+    if (typeof s.isWished  !== 'undefined') isWished  = !!s.isWished;
+    if (typeof s.currentRating !== 'undefined') currentRating = Number(s.currentRating) || 0;
+  } catch {}
+}
+
+function saveUIState(){
+  try {
+    const payload = { isWatched, isWished, currentRating };
+    localStorage.setItem(stateStorageKey(), JSON.stringify(payload));
+  } catch {}
+}
+
+// ----- Bootstrap -----
 document.addEventListener('DOMContentLoaded', async function () {
   const qs = new URLSearchParams(document.location.search);
   const id = qs.get("id");
 
-  // 1) Afficher immédiatement depuis sessionStorage (garanti par le clic)
+  // 1) Afficher immédiatement depuis sessionStorage
   let selected = null;
   try {
     const saved = sessionStorage.getItem('popflix:selected');
@@ -113,12 +203,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     renderOeuvre(appState.oeuvre);
     setPoster(appState.oeuvre.poster || "./data/images/placeholder_poster.png");
   } else {
-    // Vide si rien en sessionStorage (évite des valeurs codées en dur)
     renderOeuvre({ type: "", title: "", release_date: "", genres: "", overview: "" });
     setPoster("./data/images/placeholder_poster.png");
   }
 
-  // 2) Essayer de récupérer les données “officielles” via l’API (si id présent)
+  // 2) Optionnel: API back (si dispo)
   let apiOeuvre = null;
   if (id) {
     const urlBack = "http://127.0.0.1:5000/get_event?id=" + encodeURIComponent(id);
@@ -129,25 +218,99 @@ document.addEventListener('DOMContentLoaded', async function () {
         apiOeuvre = mapToOeuvre(json);
       }
     } catch (e) {
-      // API non dispo / CORS / mixed content, on reste sur frontOeuvre
       console.warn("API non disponible ou bloquée:", e);
     }
   }
 
-  // 3) Si l’API répond, on écrase/complète et on rerender
+  // 3) Merge API non destructif → rerender
   if (apiOeuvre) {
-    appState.oeuvre = { ...appState.oeuvre, ...apiOeuvre };
+    appState.oeuvre = mergeNonEmpty(appState.oeuvre || {}, apiOeuvre);
     renderOeuvre(appState.oeuvre);
-    if (apiOeuvre.poster) setPoster(apiOeuvre.poster);
+    if (appState.oeuvre.poster && appState.oeuvre.poster !== "nan") {
+      setPoster(appState.oeuvre.poster);
+    }
   }
 
-  // 4) Améliorer l’affiche via TMDb (si pas d’affiche déjà fiable)
+  // 4) Améliorer l’affiche via TMDb (si placeholder)
   const posterEl = document.querySelector('#poster');
   if (!posterEl?.src || posterEl.src.endsWith("placeholder_poster.png")) {
     const tmdbUrl = await fetchTmdbPoster(appState.oeuvre || {});
     if (tmdbUrl) setPoster(tmdbUrl);
   }
+
+  // 5) Recharger l'état UI et refléter
+  loadUIState();
+  if (watchedBtn && watchedText) switchButton(watchedBtn, watchedText, watchedState, isWatched);
+  if (wishedBtn && wishedText)  switchButton(wishedBtn,  wishedText,  wishedState,  isWished);
+  if (stars && stars.length)    setRating(currentRating || 0);
+
+  // 6) Ajouter la section épisodes si pertinent (après merge des données)
+  addEpisodes();
 });
+
+// ----- Épisodes (séries) -----
+function addEpisodes() {
+  const o = appState.oeuvre || {};
+  const isSerie = (o.type || "").toLowerCase().startsWith("s");
+  const total = Number(o.number_of_episodes) || 0;
+  const container = document.querySelector(".movie-container");
+  if (!container) return;
+
+  if (isSerie && total > 0) {
+    const exists = container.querySelector(".episodes-section");
+    if (exists) exists.remove();
+
+    const episodesSection = document.createElement("div");
+    episodesSection.classList.add("episodes-section");
+    episodesSection.innerHTML = `
+      <h2 class="full-row">Episodes visionnés</h2>
+      ${Array.from({ length: total }, (_, i) => `
+        <button class="watched-episode-btn">
+          <span class="watched-episode-text">Épisode ${i + 1}</span>
+        </button>
+      `).join("")}
+    `;
+    container.appendChild(episodesSection);
+
+    const episodeButtons = episodesSection.querySelectorAll(".watched-episode-btn");
+    appState.episodesWatched = Array(total).fill(!!isWatched); // si déjà “vu”, cocher tous
+
+    // initial paint selon isWatched
+    episodeButtons.forEach((btn, index) => {
+      switchButton(
+        btn,
+        btn.querySelector(".watched-episode-text"),
+        { false: `Épisode ${index + 1}`, true: `✔ Épisode ${index + 1} vu !` },
+        appState.episodesWatched[index]
+      );
+    });
+
+    episodeButtons.forEach((btn, index) => {
+      btn.addEventListener("click", () => {
+        appState.episodesWatched[index] = !appState.episodesWatched[index];
+        switchButton(
+          btn,
+          btn.querySelector(".watched-episode-text"),
+          { false: `Épisode ${index + 1}`, true: `✔ Épisode ${index + 1} vu !` },
+          appState.episodesWatched[index]
+        );
+
+        // Si tous les épisodes sont vus → isWatched = true (+ watchlist done)
+        const allWatched = appState.episodesWatched.every(Boolean);
+        if (isWatched !== allWatched) {
+          isWatched = allWatched;
+          if (watchedBtn && watchedText) switchButton(watchedBtn, watchedText, watchedState, isWatched);
+
+          // tenir les listes à jour quand on bascule tout vu / pas tout vu
+          const item = buildWatchlistItem(isWatched ? "done" : "not_started");
+          upsertWithState("watchlist", item, isWatched ? "done" : "not_started");
+          upsertWithState("wishlist",  item, isWatched ? "done" : "not_started");
+          saveUIState();
+        }
+      });
+    });
+  }
+}
 
 // ===============================
 // Interactions UI (wishlist/watchlist + étoiles)
@@ -156,15 +319,22 @@ if (wishedBtn && wishedText) {
   wishedBtn.addEventListener("click", () => {
     isWished = !isWished;
     switchButton(wishedBtn, wishedText, wishedState, isWished);
+
+    // tenir la wishlist en phase (état logique: on reste sur not_started si “souhaité”)
+    const item = buildWatchlistItem(isWished ? "not_started" : "not_started");
+    upsertWithState("wishlist", item, isWished ? "not_started" : "not_started");
+
+    saveUIState();
   });
 }
 
 if (watchedBtn && watchedText) {
   watchedBtn.addEventListener("click", () => {
     isWatched = !isWatched;
+
+    // synchroniser tous les épisodes avec l’état global
     appState.episodesWatched = appState.episodesWatched.map(() => isWatched);
     const episodeButtons = document.querySelectorAll(".watched-episode-btn");
-
     episodeButtons.forEach((btn, index) => {
       switchButton(
         btn,
@@ -175,6 +345,20 @@ if (watchedBtn && watchedText) {
     });
 
     switchButton(watchedBtn, watchedText, watchedState, isWatched);
+
+    // mettre à jour les listes
+    if (isWatched) {
+      const item = buildWatchlistItem("done");
+      upsertWithState("watchlist", item, "done");
+      upsertWithState("wishlist",  item, "done");
+      showNotification("Ajouté/mis à jour : watchlist (terminé).");
+    } else {
+      const item = buildWatchlistItem("not_started");
+      upsertWithState("watchlist", item, "not_started");
+      showNotification("Statut repassé à « pas commencé ».");
+    }
+
+    saveUIState();
   });
 }
 
@@ -233,8 +417,9 @@ function setRating(rating) {
 }
 
 function saveRating(rating) {
-  console.log('Note enregistrée:', rating + '/5');
-  showNotification(`Note enregistrée : ${rating}/5 étoiles`);
+  currentRating = Number(rating) || 0;
+  saveUIState();
+  showNotification(`Note enregistrée : ${currentRating}/5 étoiles`);
 }
 
 // Notifications
@@ -265,7 +450,7 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Retour watchlist
+// Retour watchlist (sécurisé)
 const returnBtn = document.querySelector('.return-btn');
 if (returnBtn) {
   returnBtn.addEventListener('click', function () {

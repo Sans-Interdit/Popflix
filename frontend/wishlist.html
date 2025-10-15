@@ -10,6 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
+  <script src="auth.js"></script>
+
 </head>
 
 <body data-page="wishlist">
@@ -17,18 +19,25 @@
     <div class="brand">
       <div class="logo">
         <span>POPFLIX</span>
-        <img src="./data/images/logo_popflix.png" alt="Logo POPFLIX" class="logo-img">
+        <img src="/data/images/logo_popflix.png" alt="Logo POPFLIX" class="logo-img">
       </div>
       <div class="slogan">LE POPCORN DU BINGE-WATCH</div>
     </div>
-
     <nav class="main-nav" aria-label="Menu principal">
-      <a class="nav-item" href="index.html">ACCUEIL</a>
-      <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
-      <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
-      <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHÈQUE</a>
-      <a class="nav-item" href="compte.html">MON COMPTE</a>
-      <a class="nav-item" href="contact.html">CONTACT</a>
+      <div class="nav-top">
+        <button id="logout-btn" class="btn-logout" title="Se déconnecter" aria-label="Se déconnecter">
+          <span class="logout-label">Se déconnecter</span>
+        </button>
+      </div>
+
+      <div class="nav-bottom">
+        <a class="nav-item" href="index.html">ACCUEIL</a>
+        <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
+        <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
+        <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHÈQUE</a>
+        <a class="nav-item" href="compte.html">MON COMPTE</a>
+        <a class="nav-item" href="contact.html">CONTACT</a>
+      </div>
     </nav>
   </header>
 
@@ -54,7 +63,7 @@
         <button class="filtre" type="button" tabindex="-1" aria-hidden="true">STATUT</button>
         <select id="statut-select" class="select">
           <option value="">Tous les statuts</option>
-          <option value="started">Commencés</option>
+          <option value="not_started">Pas commencés</option>
           <option value="done">Terminés</option>
         </select>
       </div>
@@ -154,6 +163,7 @@
       el.setAttribute('data-director', item.director || '');
       el.setAttribute('data-actors', item.actors || '');
       el.setAttribute('data-synopsis', item.synopsis || item.synopsis_short || '');
+      el.setAttribute('data-state', (item.state || 'not_started').toLowerCase());
 
       const title = item.title || 'Sans titre';
       const poster = (item.image || item.poster || '').trim() || PLACEHOLDER;
@@ -227,7 +237,8 @@
         director: get('data-director'),
         actors:   get('data-actors'),
         synopsis,
-        synopsis_short: synopsis
+        synopsis_short: synopsis,
+        state:   (get('data-state') || 'not_started')
       };
     }
 
@@ -269,7 +280,8 @@
         synopsis: it.synopsis || it.synopsis_short || '',
         synopsis_short: it.synopsis_short || '',
         director: it.director || '',
-        actors: it.actors || ''
+        actors: it.actors || '',
+        state: (it.state || 'not_started').toLowerCase()
       }));
       writeList(key, migrated);
 
@@ -286,8 +298,55 @@
 
       const cards = Array.from(document.querySelectorAll('#catalog article.carte'));
       for (const card of cards) { await hydrateCardIfMissing(card); }
+
+      // 1er passage de filtre après rendu
+      requestAnimationFrame(applyFiltersWL);
     })();
 
+    // ====== FILTRES (type / genre / statut / titre) ======
+    function normalize(s){ return (s||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,''); }
+
+    function applyFiltersWL(){
+      const typeV   = document.getElementById('type-select')?.value || '';
+      const genreV  = normalize(document.getElementById('genre-select')?.value || '');
+      const statutV = (document.getElementById('statut-select')?.value || '').toLowerCase(); // '' | 'not_started' | 'done'
+      const qV      = normalize(document.getElementById('q')?.value || '');
+
+      document.querySelectorAll('#catalog .carte').forEach(card => {
+        const cType  = (card.getAttribute('data-type')  || 'film').toLowerCase();
+        const cGenre = normalize(card.getAttribute('data-genre') || '');
+        const cState = (card.getAttribute('data-state') || 'not_started').toLowerCase();
+        const cTitle = normalize(card.getAttribute('data-title') || '');
+
+        const okType = !typeV ||
+          (typeV === 'films'  && cType === 'film') ||
+          (typeV === 'series' && cType === 'serie');
+
+        const okGenre = !genreV || cGenre.includes(genreV);
+        const okState = !statutV || cState === statutV;
+        const okQuery = !qV || cTitle.includes(qV);
+
+        card.style.display = (okType && okGenre && okState && okQuery) ? '' : 'none';
+      });
+    }
+
+    // câblage filtres
+    ;['type-select','genre-select','statut-select'].forEach(id=>{
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', applyFiltersWL);
+    });
+    document.getElementById('q')?.addEventListener('input', applyFiltersWL);
+
+    // bouton reset
+    document.getElementById('filters-clear')?.addEventListener('click', () => {
+      const t=document.getElementById('type-select');   if (t) t.value='';
+      const g=document.getElementById('genre-select');  if (g) g.value='';
+      const s=document.getElementById('statut-select'); if (s) s.value='';
+      const q=document.getElementById('q');             if (q) q.value='';
+      applyFiltersWL();
+    });
+
+    // ====== CLICS SUR LES CARTES ======
     document.getElementById('catalog').addEventListener('click', async (e) => {
       const addBtn = e.target.closest('.add-watchlist');
       const rmBtn  = e.target.closest('.remove-wishlist');
@@ -297,7 +356,8 @@
       if (addBtn) {
         await hydrateCardIfMissing(cardEl);
         const item = extractItemFromCard(cardEl);
-        const added = saveToList('watchlist', item);
+        const payload = { ...item, state: (item.state || 'not_started').toLowerCase() };
+        const added = saveToList('watchlist', payload);
         addBtn.setAttribute('aria-live','polite');
         addBtn.setAttribute('aria-label', added ? 'Ajouté à la watchlist' : 'Déjà présent dans la watchlist');
         addBtn.textContent = added ? 'Ajouté ✓' : 'Déjà ajouté';
@@ -322,24 +382,6 @@
         await navigateToCardByElement(cardEl);
       }
     });
-
-    document.getElementById('q').addEventListener('input', function(){
-      const normalize = s => (s || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'');
-      const q = normalize(this.value);
-      document.querySelectorAll('#catalog .carte').forEach(card => {
-        const title = normalize(card.getAttribute('data-title'));
-        card.style.display = title.includes(q) ? '' : 'none';
-      });
-    });
-
-    document.getElementById('filters-clear')?.addEventListener('click', () => {
-      const qInput = document.getElementById('q');
-      if (qInput) {
-        qInput.value = '';
-        const ev = new Event('input');
-        qInput.dispatchEvent(ev);
-      }
-    });
   </script>
 
   <footer class="site-footer">
@@ -356,5 +398,29 @@
       </nav>
     </div>
   </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const user = await me();
+        if (user) document.getElementById('logout-btn').hidden = false;
+      } catch (_) {}
+    });
+
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      try {
+        await logout();
+        localStorage.setItem('LOGOUT_BROADCAST', String(Date.now()));
+      } finally {
+        window.location.href = 'compte.html';
+      }
+    });
+
+    window.addEventListener('storage', (ev) => {
+      if (ev.key === 'LOGOUT_BROADCAST') {
+        window.location.href = 'compte.html';
+      }
+    });
+  </script>
 </body>
 </html>
