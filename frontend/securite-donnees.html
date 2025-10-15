@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <!-- =========================================================
+       0) MÉTA + ASSETS GLOBAUX
+       ========================================================= -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>POPFLIX — Sécurité et Protection des données</title>
+
+  <!-- Fonts (avec preconnect) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- CSS principal -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Librairies + logique applicative -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" defer></script>
+  <script src="/frontend/logic.js" defer></script>
+</head>
+
+<body data-page="securite-donnees">
+
+  <!-- =========================================================
+       2) EN-TÊTE (Top bar + Navigation)
+       ========================================================= -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">
+        <span>POPFLIX</span>
+        <img src="/data/images/logo_popflix.png" alt="Logo POPFLIX" class="logo-img">
+      </div>
+      <div class="slogan">LE POPCORN DU BINGE-WATCH</div>
+    </div>
+
+    <nav class="main-nav" aria-label="Menu principal">
+      <a class="nav-item" href="index.html">ACCUEIL</a>
+      <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
+      <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
+      <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHÈQUE</a>
+      <a class="nav-item" href="compte.html">MON COMPTE</a>
+    </nav>
+  </header>
+
+  <div class="legals">
+        <h1>Sécurité et Protection des données</h1>
+        <nav class="legals-links">
+        <a href="mentions-legales.html" class="legals-link">Mentions légales</a>
+        <a href="politique-confidentialite.html" class="legals-link">Politique de confidentialité</a>
+        <a href="securite-donnees.html" class="legals-link">Sécurité et protection des données</a>
+        </nav>
+    </div>
+    <div class="texte-legal">
+        <h2>1. Sécurité technique</h2>
+        <p>Le site POPFLIX est hébergé en France et utilise le protocole HTTPS pour sécuriser les connexions.  
+        Aucune donnée personnelle ni donnée bancaire n’est stockée.</p>
+        <h2>2. Confidentialité des utilisateurs</h2>
+        <p>Aucune donnée personnelle n’est volontairement collectée ni partagée.  
+        Les outils externes tels que Tally peuvent traiter des informations minimales, anonymisées et temporaires.</p>
+        <h2>3. Sauvegarde et conservation</h2>
+        <p>Toute donnée temporairement enregistrée à des fins de test est supprimée après un délai maximum d’un (1) an.</p>
+        <h2>4. Sensibilisation et cadre pédagogique</h2>
+        <p>Les membres du projet POPFLIX sont sensibilisés à la législation relative à la protection des données (RGPD)  
+        et s’engagent à respecter les bonnes pratiques en matière de sécurité et de confidentialité.</p>
+        <h2>5. Contact</h2>
+        <p>Pour toute question relative à la sécurité ou à la confidentialité, contactez : contact@popflix.fr</p>
+        <p><strong>Date d’entrée en vigueur :</strong> 15/10/2025</p>
+    </div>
+
+  <footer class="site-footer">
+        <p>
+      <img
+        src="/data/images/TMDb logo.png"
+        alt="TMDb logo"
+        style="height: 30px; vertical-align: middle; margin-right: 8px;"
+      >
+      Ce produit utilise l’API de The Movie Database (TMDb), mais n’est ni approuvé ni certifié par TMDb.
+    </p>
+  <div class="footer-content">
+    <p class="footer-text">
+      © 2025 <strong>POPFLIX</strong> — Tous droits réservés
+    </p>
+    <nav class="footer-links">
+      <a href="mentions-legales.html" class="footer-link">Mentions légales</a>
+      <a href="politique-confidentialite.html" class="footer-link">Politique de confidentialité</a>
+      <a href="securite-donnees.html" class="footer-link">Sécurité et protection des données</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>
+
+
+
