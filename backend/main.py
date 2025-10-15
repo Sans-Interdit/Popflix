@@ -292,6 +292,7 @@ def get_event():
         return jsonify({'error': f'File not found: {csv_path}'}), 500
 
     except Exception as e:
+        print(e)
         return jsonify({'error': str(e)}), 500
 
 # ------------------- Metrics / Analytics (read-only) -------------------

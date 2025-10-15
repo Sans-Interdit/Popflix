@@ -81,6 +81,9 @@ html, body {
   flex-direction: column;
   align-items: flex-end;  /* aligne tout à droite */
   gap: 10px;
+  flex-direction: column;
+  align-items: flex-end;  /* aligne tout à droite */
+  gap: 10px;
 }
 
 /* Liens du menu */
@@ -107,6 +110,38 @@ html, body {
 }
 
 .nav-item:hover { opacity: .9; }
+
+.btn-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: #fff;
+  padding: .4rem .7rem;
+  border-radius: 10px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  transition: background 0.2s ease-in-out;
+}
+
+.btn-logout:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.btn-logout .logout-label {
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+@media (max-width: 768px) {
+  .btn-logout .logout-label { display: none; }
+}
+
+
+.logout-label{
+  font-family:'Roboto', sans-serif;
+}
 
 .btn-logout {
   display: inline-flex;
