@@ -19,6 +19,8 @@
   <!-- Librairies + logique applicative -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" defer></script>
   <script src="/frontend/logic.js" defer></script>
+  <script src="auth.js"></script>
+
 </head>
 
 <body data-page="securite-donnees">
@@ -34,14 +36,21 @@
       </div>
       <div class="slogan">LE POPCORN DU BINGE-WATCH</div>
     </div>
-
     <nav class="main-nav" aria-label="Menu principal">
-      <a class="nav-item" href="index.html">ACCUEIL</a>
-      <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
-      <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
-      <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHÈQUE</a>
-      <a class="nav-item" href="compte.html">MON COMPTE</a>
-      <a class="nav-item" href="contact.html">CONTACT</a>
+      <div class="nav-top">
+        <button id="logout-btn" class="btn-logout" title="Se déconnecter" aria-label="Se déconnecter">
+          <span class="logout-label">Se déconnecter</span>
+        </button>
+      </div>
+
+      <div class="nav-bottom">
+        <a class="nav-item" href="index.html">ACCUEIL</a>
+        <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
+        <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
+        <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHÈQUE</a>
+        <a class="nav-item" href="compte.html">MON COMPTE</a>
+        <a class="nav-item" href="contact.html">CONTACT</a>
+      </div>
     </nav>
   </header>
 
@@ -90,8 +99,30 @@
     </nav>
   </div>
 </footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const user = await me();
+        if (user) document.getElementById('logout-btn').hidden = false;
+      } catch (_) {}
+    });
+
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      try {
+        await logout();
+        localStorage.setItem('LOGOUT_BROADCAST', String(Date.now()));
+      } finally {
+        window.location.href = 'compte.html';
+      }
+    });
+
+    window.addEventListener('storage', (ev) => {
+      if (ev.key === 'LOGOUT_BROADCAST') {
+        window.location.href = 'compte.html';
+      }
+    });
+  </script>
 </body>
 </html>
-
 
 

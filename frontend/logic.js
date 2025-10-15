@@ -1,19 +1,15 @@
 /* =========================================================
    LOGIC.JS — Logique de la bibliothèque POPFLIX (enrichi)
-   - Chargement CSV
-   - Requêtes TMDb pour les affiches
-   - Rendu des cartes (avec réalisateur/acteurs/synopsis court)
-   - Filtres + tri A→Z
-   - Ajout à watchlist / wishlist (localStorage)
    ========================================================= */
 
 /* =========================
    0) CONSTANTES TMDb + ASSETS
    ========================= */
-const TMDB_KEY  = "186e91ca5cf68f37adff53da8ea51136"; // ⚠️ idéalement via backend proxy
+const TMDB_KEY  = "186e91ca5cf68f37adff53da8ea51136"; // ⚠️ mettre côté backend en prod
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const TMDB_IMG  = "https://image.tmdb.org/t/p/w500";
-const PLACEHOLDER = "/data/images/placeholder_poster.png";
+const PLACEHOLDER = "data/images/placeholder_poster.png";
+const API_BASE = "http://127.0.0.1:5000";
 
 /* =========================
    1) ÉTAT GLOBAL EN MÉMOIRE
@@ -95,6 +91,13 @@ function ensureId(row, counters) {
   counters.f += 1; return `f${String(counters.f).padStart(3, "0")}`;
 }
 
+function parseEpisodes(v){
+  const s = (v ?? "").toString().trim().toLowerCase();
+  if (!s || s === "nan" || s === "none") return null;
+  const n = Number(s);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
 function mapRow(row, counters) {
   return {
     id: ensureId(row, counters),
@@ -104,13 +107,20 @@ function mapRow(row, counters) {
     type: toFrType(row.type), // "Film" | "Série"
     genre: (row.genre || "").toString().trim(),
 
-    // Nouveaux champs : on privilégie synopsis_long puis synopsis classique
+    // synopses
     synopsis_long: (row.synopsis_long || row.synopsis || "").toString().trim(),
     synopsis_short: (row.synopsis_short || "").toString().trim(),
+    // on garde une clé "synopsis" pour compat descendante
+    synopsis: (row.synopsis || row.synopsis_long || "").toString().trim(),
+
+    // crédits
     director: (row.director || "").toString().trim(),
     actors: (row.actors || "").toString().trim(),
 
-    state: (row.state || "").toString().trim() || undefined,
+    number_of_episodes: parseEpisodes(row.number_of_episodes),
+
+    // défaut : not_started (pas commencés)
+    state: ((row.state || "").toString().trim() || "not_started"),
   };
 }
 
@@ -132,9 +142,15 @@ function getItemGenres(it) {
 function cleanPoster(url) {
   let u = (url || "").toString().trim();
   if (!u) return PLACEHOLDER;
-  if (/^\/[A-Za-z0-9]/.test(u) && /\.(jpg|png|webp)$/i.test(u)) u = TMDB_IMG + u;
-  u = u.replace(/^http:\/\//i, "https://").replace(/\s+/g, " ");
-  return u;
+
+  // si c'est un asset local (ex: /data/...): on ne préfixe pas
+  if (u.startsWith("/data/")) return u;
+
+  // si c'est un chemin tmdb relatif (ex: /abcd.jpg), on préfixe
+  if (u.startsWith("/") && !u.startsWith("//")) return TMDB_IMG + u;
+
+  // sinon on normalise juste le protocole
+  return u.replace(/^http:\/\//i, "https://").replace(/\s+/g, " ");
 }
 
 function toCardHTML(item) {
@@ -146,9 +162,7 @@ function toCardHTML(item) {
   const year     = item.year || "";
   const genre    = (item.genre || "").toString().trim();
 
-  const synopsisShort = (item.synopsis_short || item.synopsis || "").toString().trim();
-  const director = (item.director || "").toString().trim();
-  const actors = (item.actors || "").toString().trim();
+  const synopsisShort = (item.synopsis_short || item.synopsis_long || item.synopsis || "").toString().trim();
 
   return `
     <article class="carte ${type}" data-type="${type}">
@@ -170,13 +184,11 @@ function toCardHTML(item) {
             ${year     ? `<li class="year">${year}</li>`   : ''}
             ${genre    ? `<li class="genre">${genre}</li>` : ''}
           </ul>
-          ${synopsisShort ? `
-            <div class="synopsis">${synopsisShort}</div>
-          ` : ''}
+          ${synopsisShort ? `<div class="synopsis">${synopsisShort}</div>` : ''}
         </div>
       </div>
 
-      <!-- Boutons d’action (ajouts vers listes locales) -->
+      <!-- Boutons d’action -->
       <div class="boutons">
         <button type="button" class="btn btn-watchlist">Ajouter à ma watchlist</button>
         <button type="button" class="btn btn-wishlist">Ajouter à ma wishlist</button>
@@ -191,10 +203,75 @@ function sortAlphabetically(list) {
   );
 }
 
+// === Local lists (lecture seule) + normalisation titre ===
+function readList(name){ try { return JSON.parse(localStorage.getItem(name) || '[]'); } catch { return []; } }
+const normalizeTitle = s => norm(s || '');
+
+// Priorité "done" > autres
+function computeLocalStateIndex(){
+  const all = [...readList('watchlist'), ...readList('wishlist')];
+  const idx = new Map();
+  for (const it of all){
+    const id = (it?.id || '').toString().trim();
+    const keyId = id ? `id:${id}` : null;
+    const keyTitle = `t:${normalizeTitle(it?.title)}`;
+    const st = (it?.state || 'not_started').toLowerCase();
+
+    const choose = prev => (prev === 'done' ? 'done' : (st === 'done' ? 'done' : st));
+    if (keyId) idx.set(keyId, choose(idx.get(keyId)));
+    idx.set(keyTitle, choose(idx.get(keyTitle)));
+  }
+  return idx;
+}
+
+function mergeLocalStates(list){
+  const idx = computeLocalStateIndex();
+  return (list || []).map(it => {
+    const idKey = it.id ? `id:${it.id}` : null;
+    const tKey  = `t:${normalizeTitle(it.title)}`;
+    const st = (idKey && idx.get(idKey)) || idx.get(tKey);
+    if (st) it.state = st;
+    return it;
+  });
+}
+
+// Merge CSV + listes locales (pour afficher aussi les items ajoutés par l’utilisateur)
+function mergeWithLocalLists(csvItems) {
+  const wishlist  = readList('wishlist');
+  const watchlist = readList('watchlist');
+
+  const byKey = new Map();
+  const put = (it) => {
+    const key = it?.id ? `id:${it.id}` : `t:${normalizeTitle(it?.title)}`;
+    if (!byKey.has(key)) byKey.set(key, it);
+  };
+
+  csvItems.forEach(put);
+  [...wishlist, ...watchlist].forEach(raw => {
+    put({
+      id: raw.id,
+      title: raw.title,
+      poster: raw.poster || raw.image || "",
+      year: raw.year || "",
+      type: (raw.type || "").toLowerCase() === 'serie' ? 'Série' : 'Film',
+      genre: raw.genre || "",
+      synopsis_long: raw.synopsis || raw.synopsis_long || "",
+      synopsis_short: raw.synopsis_short || "",
+      synopsis: raw.synopsis || "",
+      director: raw.director || "",
+      actors: raw.actors || "",
+      number_of_episodes: raw.number_of_episodes ?? null,
+      state: raw.state || "not_started",
+    });
+  });
+
+  return [...byKey.values()];
+}
+
 function renderCards(list) {
   const container = document.getElementById("catalog");
   if (!container) return;
-  const sorted = sortAlphabetically(list);        // tri A→Z par défaut
+  const sorted = sortAlphabetically(list);
   container.innerHTML = sorted.map(toCardHTML).join("");
 }
 
@@ -203,7 +280,7 @@ function renderCards(list) {
    ========================================================= */
 const filterState = {
   type: null,          // "series" | "films" | null
-  statut: null,        // "started" | "done"  | null
+  statut: null,        // "not_started" | "started" | "done" | null
   genres: new Set(),   // 0 ou 1 entrée via le <select>
   query: ""            // texte
 };
@@ -229,18 +306,17 @@ function applyFilters() {
       const itemGenres = getItemGenres(it);
       if (!itemGenres.includes(g)) return false;
     }
-    // TITRE (ou recherche plein texte simple)
+    // RECHERCHE
     if (q) {
-      const hay = [it.title, it.genre, it.director, it.actors].map(x => norm(x)).join(" ");
+      const hay = [it.title, it.genre, it.director, it.actors, it.synopsis_long, it.synopsis_short]
+        .map(x => norm(x)).join(" ");
       if (!hay.includes(q)) return false;
     }
 
     return true;
   });
 
-  // Tri A→Z avant rendu
   filtered.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'fr', { sensitivity: 'base' }));
-
   renderCards(filtered);
 }
 
@@ -251,12 +327,13 @@ function saveToList(listName, item) {
   try {
     const list = JSON.parse(localStorage.getItem(listName) || '[]');
     const normf = s => (s||'').toString().trim().toLowerCase()
-      .normalize('NFD').replace(/\p{Diacritic}/gu,''); // casse + accents
-    const exists = list.some(i => {
-      if (i.id && item.id) return i.id === item.id;     // priorité à l'ID
-      return normf(i.title) === normf(item.title);      // fallback titre
-    });
-    if (exists) return false;
+      .normalize('NFD').replace(/\p{Diacritic}/gu,'');
+    const idx = list.findIndex(i => (i.id && item.id && i.id === item.id) || normf(i.title) === normf(item.title));
+    if (idx >= 0) {
+      list[idx] = { ...list[idx], ...item };
+      localStorage.setItem(listName, JSON.stringify(list));
+      return false; // déjà présent
+    }
     list.push(item);
     localStorage.setItem(listName, JSON.stringify(list));
     return true;
@@ -272,7 +349,6 @@ function setButtonLabel(el, text) {
 function onCatalogClick(e) {
   const btn = e.target.closest('.btn-watchlist, .btn-wishlist');
   if (btn) {
-    // anti double-clic / double-handler
     if (btn.dataset.lock === '1') return;
     btn.dataset.lock = '1';
 
@@ -287,20 +363,22 @@ function onCatalogClick(e) {
     const id   = idEl?.dataset?.id;
     if (!id) { btn.dataset.lock = '0'; return; }
 
-    const item = items.find(it => it.id === id);
-    if (!item) { btn.dataset.lock = '0'; return; }
+    const it = items.find(x => x.id === id);
+    if (!it) { btn.dataset.lock = '0'; return; }
 
     const payload = {
-      id: item.id,
-      title: item.title,
-      image: cleanPoster(item.poster) || PLACEHOLDER,
-      type: (item.type || '').toLowerCase().startsWith('s') ? 'serie' : 'film',
-      year: item.year || '',
-      genre: item.genre || '',
-      synopsis: item.synopsis || '',
-      synopsis_short: item.synopsis_short || '',
-      director: item.director || '',
-      actors: item.actors || ''
+      id: it.id,
+      title: it.title,
+      image: cleanPoster(it.poster) || PLACEHOLDER,
+      type: (it.type || '').toLowerCase().startsWith('s') ? 'serie' : 'film',
+      year: it.year || '',
+      genre: it.genre || '',
+      // synopsis: privilégier la version longue si dispo
+      synopsis: it.synopsis_long || it.synopsis || '',
+      synopsis_short: it.synopsis_short || '',
+      director: it.director || '',
+      actors: it.actors || '',
+      state: "not_started"
     };
 
     const key = btn.classList.contains('btn-wishlist') ? 'wishlist' : 'watchlist';
@@ -328,28 +406,24 @@ function onCatalogClick(e) {
   const id = card.dataset.id;
   if (!id) return;
 
-  // 1) Récupère l’item correspondant
-  const item = items.find(it => it.id === id);
-  if (item) {
-  const payload = {
-    id: item.id,
-    type: item.type,
-    title: item.title,
-    year: item.year,
-    genre: item.genre,
-    synopsis_long: item.synopsis_long || item.synopsis || "",
-    synopsis_short: item.synopsis_short || "",
-    synopsis: item.synopsis || "", // compat si d'autres scripts lisent "synopsis"
-    director: item.director || "",
-    actors: item.actors || "",
-    poster: cleanPoster(item.poster) || PLACEHOLDER
-  };
+  const it = items.find(x => x.id === id);
+  if (it) {
+    const payload = {
+      id: it.id,
+      type: it.type,
+      title: it.title,
+      year: it.year,
+      genre: it.genre,
+      synopsis_long: it.synopsis_long || it.synopsis || "",
+      synopsis_short: it.synopsis_short || "",
+      synopsis: it.synopsis || "", // compat
+      director: it.director || "",
+      actors: it.actors || "",
+      poster: cleanPoster(it.poster) || PLACEHOLDER
+    };
+    sessionStorage.setItem('popflix:selected', JSON.stringify(payload));
+  }
 
-  sessionStorage.setItem('popflix:selected', JSON.stringify(payload));
-}
-
-
-  // 3) Redirection (chemin RELATIF)
   window.location.href = `carte.html?id=${encodeURIComponent(id)}`;
 }
 
@@ -408,7 +482,7 @@ function initFilters() {
     });
   }
 
-  // RESET (vide les filtres, remet le rendu)
+  // RESET
   const clearBtn = document.getElementById("filters-clear");
   if (clearBtn) {
     clearBtn.addEventListener("click", () => {
@@ -421,6 +495,7 @@ function initFilters() {
       if (stSel)   stSel.value = "";
       const gSel = document.getElementById("genre-select");
       if (gSel) gSel.value = "";
+      const input = document.getElementById("q");
       if (input) input.value = "";
 
       applyFilters();
@@ -428,34 +503,59 @@ function initFilters() {
   }
 }
 
-
-
 /* =========================================================
-   11) BOOTSTRAP : chargement CSV + hydratation affiches
+   11) CHARGEMENT CSV (fallback) + HYDRATATION
    ========================================================= */
-async function loadCSVAndBoot() {
-  const csvUrl = "/data/base_de_donnees/films_series_200_filled.csv";
-  try {
-    const res = await fetch(csvUrl, { cache: "no-store" });
-    const csvText = await res.text();
+async function loadCatalogueCSV() {
+  const CANDIDATES = [
+    "data/base_de_donnees/films_series_200_filled_episodes.csv",
+    "data/base_de_donnees/films_series_200_filled.csv"
+  ];
 
-    const parsed = Papa.parse(csvText, {
-      header: true,
-      skipEmptyLines: true,
-      dynamicTyping: false
-    });
+  for (const url of CANDIDATES) {
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) continue;
+      const text = await res.text();
+      return await new Promise((resolve, reject) => {
+        Papa.parse(text, {
+          header: true,
+          skipEmptyLines: true,
+          dynamicTyping: false,
+          transformHeader: h => h.trim(),
+          complete: (r) => resolve(r.data || []),
+          error: reject
+        });
+      });
+    } catch {
+      // essaie le suivant
+    }
+  }
+  return [];
+}
+
+async function loadCSVAndBoot() {
+  try {
+    const rows = await loadCatalogueCSV();
 
     const counters = { f: 0, s: 0 };
-    items = parsed.data.map(row => mapRow(row, counters));
+    const mapped = rows.map(row => mapRow(row, counters));
 
-    // 1) Affiche vite avec placeholders
+    // 1) Applique les statuts locaux sur le CSV…
+    let merged = mergeLocalStates(mapped);
+    // …et ajoute les éléments présents UNIQUEMENT dans les listes locales
+    merged = mergeWithLocalLists(merged);
+
+    items = merged;
+
+    // 2) Affiche vite avec placeholders
     renderCards(items.map(it => ({ ...it, poster: PLACEHOLDER })));
 
-    // 2) Hydrate posters TMDb puis rend + filtre (tri A→Z)
+    // 3) Hydrate posters TMDb puis rend + filtre
     await hydratePosters(items);
     applyFilters();
 
-    // 3) Câblage des filtres (après 1er rendu OK)
+    // 4) Câblage des filtres
     initFilters();
   } catch (e) {
     console.error("Erreur de chargement CSV :", e);

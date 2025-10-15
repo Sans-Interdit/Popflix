@@ -78,8 +78,9 @@ header {
 
 .main-nav {
   display: flex;
-  gap: 28px;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-end;  /* aligne tout à droite */
+  gap: 10px;
 }
 
 /* Liens du menu */
@@ -89,10 +90,55 @@ header {
   font-weight: 700;
   font-size: 22px;
   letter-spacing: 2px;
-  transition: opacity .15s ease-in-out;
+  transition: opacity .15s ease-in-out, transform .15s ease-in-out;
+  white-space: nowrap;
+}
+
+.nav-bottom{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  align-items:center;
+  width:100%;                           /* clé : occupe toute la rangée */
+  gap:32px;                             /* espace entre liens */
+  row-gap:10px;                         /* si ça wrap, espace vertical entre lignes */
+  padding-right:24px;                   /* respiration depuis le bord droit */
+  padding-top:6px;                      /* un peu d’air sous “Se déconnecter” */
 }
 
 .nav-item:hover { opacity: .9; }
+
+.btn-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: #fff;
+  padding: .4rem .7rem;
+  border-radius: 10px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  transition: background 0.2s ease-in-out;
+}
+
+.btn-logout:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.btn-logout .logout-label {
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+@media (max-width: 768px) {
+  .btn-logout .logout-label { display: none; }
+}
+
+
+.logout-label{
+  font-family:'Roboto', sans-serif;
+}
 
 /* Actif selon la page (via body[data-page]) */
 body[data-page="watchlist"]     .nav-item[href*="watchlist"],
@@ -247,10 +293,15 @@ nav a:hover::after {
     font-family: 'Roboto', sans-serif;
 }
 
+.container {
+  display: flex;
+  justify-content: flex-end; /* aligne le contenu à droite */
+  align-items: center;       /* (optionnel) centre verticalement */
+}
+
 .type {
-  display: inline-block;
-  float: right;
-  justify-content: flex-end;
+  display: inline-flex; /* garde la bordure ajustée au texte */
+  justify-content: center;
   align-items: center;
   color: var(--text);
   background-color: transparent;
@@ -261,6 +312,7 @@ nav a:hover::after {
   box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
   font-size: 25px;
 }
+
 
 
 .info-label {

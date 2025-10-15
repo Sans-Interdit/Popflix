@@ -5,31 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>POPFLIX — Ma Watchlist</title>
 
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
+  <script src="auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const user = await me();
+        if (user) document.getElementById('logout-btn').hidden = false;
+      } catch (_) {}
+    });
+  </script>
 </head>
-
 <body data-page="watchlist">
   <header class="topbar">
     <div class="brand">
       <div class="logo">
         <span>POPFLIX</span>
-        <img src="./data/images/logo_popflix.png" alt="Logo POPFLIX" class="logo-img">
+        <img src="/data/images/logo_popflix.png" alt="Logo POPFLIX" class="logo-img">
       </div>
       <div class="slogan">LE POPCORN DU BINGE-WATCH</div>
     </div>
-
     <nav class="main-nav" aria-label="Menu principal">
-      <a class="nav-item" href="index.html">ACCUEIL</a>
-      <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
-      <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
-      <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHÈQUE</a>
-      <a class="nav-item" href="compte.html">MON COMPTE</a>
-      <a class="nav-item" href="contact.html">CONTACT</a>
+      <div class="nav-top">
+        <button id="logout-btn" class="btn-logout" title="Se déconnecter" aria-label="Se déconnecter">
+          <span class="logout-label">Se déconnecter</span>
+        </button>
+      </div>
+
+      <div class="nav-bottom">
+        <a class="nav-item" href="index.html">ACCUEIL</a>
+        <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
+        <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
+        <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHÈQUE</a>
+        <a class="nav-item" href="compte.html">MON COMPTE</a>
+        <a class="nav-item" href="contact.html">CONTACT</a>
+      </div>
     </nav>
   </header>
 
@@ -55,7 +69,7 @@
         <button class="filtre" type="button" tabindex="-1" aria-hidden="true">STATUT</button>
         <select id="statut-select" class="select">
           <option value="">Tous les statuts</option>
-          <option value="started">Commencés</option>
+          <option value="not_started">Pas commencés</option>
           <option value="done">Terminés</option>
         </select>
       </div>
@@ -70,7 +84,7 @@
 
   <section id="catalog" class="grid"></section>
 
-  <!-- ===== Constantes TMDb + helpers ===== -->
+  <!-- ===== TMDb helpers ===== -->
   <script>
     const PLACEHOLDER = "./data/images/placeholder_poster.png";
     const TMDB_KEY  = "186e91ca5cf68f37adff53da8ea51136";
@@ -91,7 +105,6 @@
 
     async function tmdbCredits(kind, id){
       try{
-        // TV: aggregate_credits donne un meilleur cast
         const endpoint = kind === "tv" ? "aggregate_credits" : "credits";
         const r = await fetch(`${TMDB_BASE}/${kind}/${id}/${endpoint}?api_key=${TMDB_KEY}&language=fr-FR`);
         const j = r.ok ? await r.json() : null;
@@ -99,13 +112,11 @@
 
         let director = "";
         if (j.crew?.length){
-          // films: job === "Director", TV: parfois "Director" par épisode – on regroupe
           const dirs = j.crew.filter(c => (c.job === "Director" || c.jobs?.some?.(jj => jj.job === "Director"))).map(c=>c.name);
           director = [...new Set(dirs)].slice(0,3).join(", ");
         }
         let actors = "";
         if (Array.isArray(j.cast)){
-          // TV aggregate: cast[].roles ; Movie: cast[].character
           actors = j.cast.map(c => c.name).slice(0,5).join(", ");
         }
         return { director, actors };
@@ -115,7 +126,7 @@
     async function hydrateCardIfMissing(cardEl){
       const hasDirector = (cardEl.getAttribute('data-director') || "").trim();
       const hasActors   = (cardEl.getAttribute('data-actors') || "").trim();
-      if (hasDirector && hasActors) return; // déjà ok
+      if (hasDirector && hasActors) return;
 
       const title = cardEl.getAttribute('data-title') || "";
       const year  = cardEl.getAttribute('data-annee') || "";
@@ -128,11 +139,9 @@
       const { director, actors } = await tmdbCredits(isTv ? "tv" : "movie", id);
       if (!(director || actors)) return;
 
-      // maj DOM (data-*) pour l’extract + affichage si besoin
       if (director) cardEl.setAttribute('data-director', director);
       if (actors)   cardEl.setAttribute('data-actors', actors);
 
-      // mettre à jour l’objet dans localStorage (persistance)
       try{
         const list = JSON.parse(localStorage.getItem('watchlist') || '[]');
         const elId = cardEl.getAttribute('data-id');
@@ -146,7 +155,7 @@
     }
   </script>
 
-  <!-- ===== Constructeur de carte + actions ===== -->
+  <!-- ===== Carte + actions ===== -->
   <script>
     function buildCard(item, { showActions = true } = {}) {
       const el = document.createElement('article');
@@ -163,6 +172,7 @@
       el.setAttribute('data-director', item.director || '');
       el.setAttribute('data-actors',  item.actors  || '');
       el.setAttribute('data-synopsis', item.synopsis || item.synopsis_short || '');
+      el.setAttribute('data-state', (item.state || 'not_started').toLowerCase());
 
       const title = item.title || 'Sans titre';
       const poster = (item.image || item.poster || '').trim() || PLACEHOLDER;
@@ -202,7 +212,7 @@
     }
   </script>
 
-  <!-- ===== Logique locale : storage, rendu, clics ===== -->
+  <!-- ===== Rendu + events ===== -->
   <script>
     function readList(key){ try{ return JSON.parse(localStorage.getItem(key)) || []; }catch{ return []; } }
     function writeList(key, arr){ try{ localStorage.setItem(key, JSON.stringify(arr)); }catch{} }
@@ -230,12 +240,12 @@
         director: get('data-director'),
         actors:   get('data-actors'),
         synopsis,
-        synopsis_short: synopsis
+        synopsis_short: synopsis,
+        state:    (get('data-state') || 'not_started')
       };
     }
 
     async function navigateToCardByIdFromElement(cardEl){
-      // si director/actors manquent → hydrate depuis TMDb avant de partir
       if (!(cardEl.getAttribute('data-director') || cardEl.getAttribute('data-actors'))) {
         await hydrateCardIfMissing(cardEl);
       }
@@ -261,6 +271,7 @@
       const catalog = document.getElementById('catalog');
       const key = 'watchlist';
 
+      // migration + state par défaut "not_started" si absent
       const migrated = readList(key).map(it => ({
         id: it.id,
         title: it.title,
@@ -271,7 +282,8 @@
         synopsis: it.synopsis || it.synopsis_short || '',
         synopsis_short: it.synopsis_short || '',
         director: it.director || '',
-        actors: it.actors || ''
+        actors: it.actors || '',
+        state: (it.state || 'not_started').toLowerCase()
       }));
       writeList(key, migrated);
 
@@ -286,11 +298,59 @@
       );
       migrated.forEach(item => catalog.appendChild(buildCard(item, { showActions: true })));
 
-      // hydration TMDb pour les anciens items incomplets
+      // compléter director/actors manquants
       const cards = Array.from(document.querySelectorAll('#catalog article.carte'));
       for (const card of cards) { await hydrateCardIfMissing(card); }
+
+      // 1er passage de filtre après rendu
+      requestAnimationFrame(applyFiltersWL);
     })();
 
+    // ====== FILTRES (type / genre / statut / titre) ======
+    function normalize(s){ return (s||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,''); }
+
+    function applyFiltersWL(){
+      const typeV   = document.getElementById('type-select')?.value || '';
+      const genreV  = normalize(document.getElementById('genre-select')?.value || '');
+      const statutV = (document.getElementById('statut-select')?.value || '').toLowerCase();
+      const qV      = normalize(document.getElementById('q')?.value || '');
+
+      document.querySelectorAll('#catalog .carte').forEach(card => {
+        const cType  = (card.getAttribute('data-type')  || 'film').toLowerCase(); // 'film' | 'serie'
+        const cGenre = normalize(card.getAttribute('data-genre') || '');
+        const cState = (card.getAttribute('data-state') || 'not_started').toLowerCase();
+        const cTitle = normalize(card.getAttribute('data-title') || '');
+
+        // mapping select → data-type
+        const okType = !typeV ||
+          (typeV === 'films'  && cType === 'film') ||
+          (typeV === 'series' && cType === 'serie');
+
+        const okGenre = !genreV || cGenre.includes(genreV);
+        const okState = !statutV || cState === statutV; // 'not_started' | 'done'
+        const okQuery = !qV || cTitle.includes(qV);
+
+        card.style.display = (okType && okGenre && okState && okQuery) ? '' : 'none';
+      });
+    }
+
+    // câblage des filtres
+    ;['type-select','genre-select','statut-select'].forEach(id=>{
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', applyFiltersWL);
+    });
+    document.getElementById('q')?.addEventListener('input', applyFiltersWL);
+
+    // reset
+    document.getElementById('filters-clear')?.addEventListener('click', () => {
+      const t=document.getElementById('type-select');   if (t) t.value='';
+      const g=document.getElementById('genre-select');  if (g) g.value='';
+      const s=document.getElementById('statut-select'); if (s) s.value='';
+      const q=document.getElementById('q');             if (q) q.value='';
+      applyFiltersWL();
+    });
+
+    // ====== CLICS SUR LES CARTES ======
     document.getElementById('catalog').addEventListener('click', async (e) => {
       const addBtn = e.target.closest('.add-wishlist');
       const rmBtn  = e.target.closest('.remove-watchlist');
@@ -298,10 +358,12 @@
       if (!cardEl) return;
 
       if (addBtn) {
-        // S’assurer d’ajouter un item enrichi
+        // enrichir et pousser vers wishlist en "not_started"
         await hydrateCardIfMissing(cardEl);
         const item = extractItemFromCard(cardEl);
-        const added = saveToList('wishlist', item);
+        if (!item.state) item.state = 'not_started';
+        const payload = { ...item, state: (item.state || 'not_started').toLowerCase() };
+        const added = saveToList('wishlist', payload);
         addBtn.setAttribute('aria-live','polite');
         addBtn.setAttribute('aria-label', added ? 'Ajouté à la wishlist' : 'Déjà présent dans la wishlist');
         addBtn.textContent = added ? 'Ajouté ✓' : 'Déjà ajouté';
@@ -326,23 +388,6 @@
         await navigateToCardByIdFromElement(cardEl);
       }
     });
-
-    document.getElementById('q').addEventListener('input', function(){
-      const q = (this.value || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'');
-      document.querySelectorAll('#catalog .carte').forEach(card=>{
-        const title = (card.getAttribute('data-title') || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'');
-        card.style.display = title.includes(q) ? '' : 'none';
-      });
-    });
-
-    document.getElementById('filters-clear').addEventListener('click', () => {
-      const q = document.getElementById('q');
-      if (q) {
-        q.value = '';
-        const event = new Event('input', { bubbles: true });
-        q.dispatchEvent(event);
-      }
-    });
   </script>
 
   <footer class="site-footer">
@@ -359,5 +404,28 @@
       </nav>
     </div>
   </footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const user = await me();
+        if (user) document.getElementById('logout-btn').hidden = false;
+      } catch (_) {}
+    });
+
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      try {
+        await logout();
+        localStorage.setItem('LOGOUT_BROADCAST', String(Date.now()));
+      } finally {
+        window.location.href = 'compte.html';
+      }
+    });
+
+    window.addEventListener('storage', (ev) => {
+      if (ev.key === 'LOGOUT_BROADCAST') {
+        window.location.href = 'compte.html';
+      }
+    });
+  </script>
 </body>
 </html>

@@ -18,20 +18,15 @@
 
   <!-- Librairies + logique applicative -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" defer></script>
-  <script src="/frontend/logic.js" defer></script>
+  <script src="./logic.js" defer></script>   <!-- pas d’antislashs -->
+  <script src="./auth.js" defer></script>
+
+
 </head>
 
 <body data-page="bibliotheque">
-  <!-- =========================================================
-       1) BOUTON "RETOUR EN HAUT"
-       - placé dans le body (pas en dehors)
-       - affiché/masqué via JS (voir script en bas)
-       ========================================================= -->
   <button id="backToTop" title="Retour en haut" style="display:none;">↑</button>
 
-  <!-- =========================================================
-       2) EN-TÊTE (Top bar + Navigation)
-       ========================================================= -->
   <header class="topbar">
     <div class="brand">
       <div class="logo">
@@ -40,21 +35,24 @@
       </div>
       <div class="slogan">LE POPCORN DU BINGE-WATCH</div>
     </div>
-
     <nav class="main-nav" aria-label="Menu principal">
-      <a class="nav-item" href="index.html">ACCUEIL</a>
-      <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
-      <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
-      <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHÈQUE</a>
-      <a class="nav-item" href="compte.html">MON COMPTE</a>
-      <a class="nav-item" href="contact.html">CONTACT</a>
+      <div class="nav-top">
+        <button id="logout-btn" class="btn-logout" title="Se déconnecter" aria-label="Se déconnecter">
+          <span class="logout-label">Se déconnecter</span>
+        </button>
+      </div>
+
+      <div class="nav-bottom">
+        <a class="nav-item" href="index.html">ACCUEIL</a>
+        <a class="nav-item" href="watchlist.html">MA WATCHLIST</a>
+        <a class="nav-item" href="wishlist.html">MA WISHLIST</a>
+        <a class="nav-item" href="bibliotheque.html">TOUTE LA BIBLIOTHÈQUE</a>
+        <a class="nav-item" href="compte.html">MON COMPTE</a>
+        <a class="nav-item" href="contact.html">CONTACT</a>
+      </div>
     </nav>
   </header>
 
-  <!-- =========================================================
-       3) BARRE DE FILTRES (connectée à logic.js)
-       - Type, Genre, Statut, Recherche texte, Reset
-       ========================================================= -->
   <section class="filters" id="filters">
     <h2>Toute la bibliothèque</h2>
 
@@ -80,70 +78,73 @@
         <button class="filtre" type="button" tabindex="-1" aria-hidden="true">STATUT</button>
         <select id="statut-select" class="select">
           <option value="">Tous les statuts</option>
-          <option value="started">Commencés</option>
+          <option value="not_started">Pas commencés</option>
           <option value="done">Terminés</option>
         </select>
       </div>
 
       <!-- TITRE -->
-        <div class="filter-group">
+      <div class="filter-group">
         <div class="filter-field">
-            <span class="filter-label">TITRE</span>
-            <input id="q" class="filter-input" type="text" placeholder="Rechercher un titre…" />
+          <span class="filter-label">TITRE</span>
+          <input id="q" class="filter-input" type="text" placeholder="Rechercher un titre…" />
         </div>
 
         <button id="filters-clear" class="filtre filtre--ghost" type="button" title="Réinitialiser">
-            Réinitialiser
+          Réinitialiser
         </button>
-        </div>
-    </div> <!-- /filters-right -->
-    </section> <!-- /filters -->
+      </div>
+    </div>
+  </section>
 
+  <section id="catalog" class="library-grid"></section>
 
-  <!-- =========================================================
-       4) CONTENEUR DES CARTES (rempli par logic.js)
-       ========================================================= -->
-  <section id="catalog" class="grid"></section>
-
-  <!-- =========================================================
-       5) PIED DE PAGE (crédit TMDb)
-       ========================================================= -->
   <footer class="site-footer">
-        <p>
-      <img
-        src="/data/images/TMDb logo.png"
-        alt="TMDb logo"
-        style="height: 30px; vertical-align: middle; margin-right: 8px;"
-      >
+    <p>
+      <img src="./data/images/TMDb logo.png" alt="TMDb logo" style="height: 30px; vertical-align: middle; margin-right: 8px;">
       Ce produit utilise l’API de The Movie Database (TMDb), mais n’est ni approuvé ni certifié par TMDb.
     </p>
-  <div class="footer-content">
-    <p class="footer-text">
-      © 2025 <strong>POPFLIX</strong> — Tous droits réservés
-    </p>
-    <nav class="footer-links">
-      <a href="mentions-legales.html" class="footer-link">Mentions légales</a>
-      <a href="politique-confidentialite.html" class="footer-link">Politique de confidentialité</a>
-      <a href="securite-donnees.html" class="footer-link">Sécurité et protection des données</a>
-    </nav>
-  </div>
-</footer>
+    <div class="footer-content">
+      <p class="footer-text">© 2025 <strong>POPFLIX</strong> — Tous droits réservés</p>
+      <nav class="footer-links">
+        <a href="mentions-legales.html" class="footer-link">Mentions légales</a>
+        <a href="politique-confidentialite.html" class="footer-link">Politique de confidentialité</a>
+        <a href="securite-donnees.html" class="footer-link">Sécurité et protection des données</a>
+      </nav>
+    </div>
+  </footer>
 
-  <!-- =========================================================
-       6) SCRIPT "RETOUR EN HAUT"
-       - Affiche le bouton après 200px de scroll
-       - Smooth scroll vers le haut au clic
-       ========================================================= -->
   <script>
     const backToTopBtn = document.getElementById("backToTop");
-
     window.addEventListener('scroll', () => {
       const show = document.documentElement.scrollTop > 200 || document.body.scrollTop > 200;
       backToTopBtn.style.display = show ? "block" : "none";
     });
-
     backToTopBtn.addEventListener('click', () => {
       window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const user = await me();
+        if (user) document.getElementById('logout-btn').hidden = false;
+      } catch (_) {}
+    });
+
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      try {
+        await logout();
+        localStorage.setItem('LOGOUT_BROADCAST', String(Date.now()));
+      } finally {
+        window.location.href = 'compte.html';
+      }
+    });
+
+    window.addEventListener('storage', (ev) => {
+      if (ev.key === 'LOGOUT_BROADCAST') {
+        window.location.href = 'compte.html';
+      }
     });
   </script>
 </body>
