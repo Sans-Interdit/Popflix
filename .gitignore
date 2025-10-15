@@ -1,2 +1,4 @@
 backend/venv
 backend/__pycache__
+data/base_de_donnees/__pycache__
+data/base_de_donnees/TMDB_tv_dataset_v3.csv

@@ -7,7 +7,7 @@ CORS(app)  # Autorise les requêtes depuis d'autres origines (localhost:5500 inc
 
 @app.route("/get_event", methods=["GET"])
 def get_event():
-    csvUrl = "data/base_de_donnees/films_series_200_filled.csv"
+    csvUrl = "data/base_de_donnees/films_series_200_filled_episodes.csv"
 
     id = request.args.get("id")
     print(id)
@@ -27,7 +27,8 @@ def get_event():
                         'year': row['year'],
                         'type': row['type'],
                         'genre': row['genre'],
-                        'synopsis': row['synopsis']
+                        'synopsis': row['synopsis'],
+                        'number_of_episodes': int(row['number_of_episodes']) if  row['number_of_episodes'] != "nan" else None
                     }), 200
 
         # Si aucun film ne correspond à l'id
@@ -37,6 +38,7 @@ def get_event():
         return jsonify({'error': f'File not found: {csvUrl}'}), 500
 
     except Exception as e:
+        print(e)
         return jsonify({'error': str(e)}), 500
 
 

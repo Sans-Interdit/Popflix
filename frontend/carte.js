@@ -76,6 +76,7 @@ async function fetchTmdbPoster({ title, type, release_date }) {
 // ----- Mapping util -----
 function mapToOeuvre(src) {
   if (!src) return null;
+  console.log(src.number_of_episodes)
   return {
     // accepte clés côté front (items) ET côté API
     id: src.id,
@@ -89,7 +90,8 @@ function mapToOeuvre(src) {
     synopsis_short: src.synopsis_short || "",
     director: src.director || "",
     actors: src.actors || "",
-    poster: src.poster || ""
+    poster: src.poster || "",
+    number_of_episodes: src.number_of_episodes || 0
   };
 }
 
@@ -126,6 +128,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       const r = await fetch(urlBack, { headers: { 'Content-Type': 'application/json' } });
       if (r.ok) {
         const json = await r.json();
+        console.log("fdsfdsfsd",json)
         apiOeuvre = mapToOeuvre(json);
       }
     } catch (e) {
@@ -134,12 +137,18 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
   }
 
-  // 3) Si l’API répond, on écrase/complète et on rerender
-  if (apiOeuvre) {
-    appState.oeuvre = { ...appState.oeuvre, ...apiOeuvre };
-    renderOeuvre(appState.oeuvre);
-    if (apiOeuvre.poster) setPoster(apiOeuvre.poster);
-  }
+    // 3) Si l’API répond, on écrase/complète et on rerender
+    if (apiOeuvre) {
+        appState.oeuvre = {
+            ...appState.oeuvre,
+            ...Object.fromEntries(
+            Object.entries(apiOeuvre).filter(([_, v]) => v !== undefined && v !== null && v !== "")
+            )
+        };
+        renderOeuvre(appState.oeuvre);
+        console.log(apiOeuvre.poster)
+        if (apiOeuvre.poster && apiOeuvre.poster != "nan") setPoster(apiOeuvre.poster);
+    }
 
   // 4) Améliorer l’affiche via TMDb (si pas d’affiche déjà fiable)
   const posterEl = document.querySelector('#poster');
@@ -147,7 +156,52 @@ document.addEventListener('DOMContentLoaded', async function () {
     const tmdbUrl = await fetchTmdbPoster(appState.oeuvre || {});
     if (tmdbUrl) setPoster(tmdbUrl);
   }
+  
+  addEpisodes();
+  console.log(appState.oeuvre)
 });
+
+function addEpisodes() {
+    console.log(appState.oeuvre.number_of_episodes)
+    const container = document.querySelector(".movie-container");
+    if (appState.oeuvre.type === "Série" && appState.oeuvre.number_of_episodes > 0) {
+        const episodesSection = document.createElement("div");
+        episodesSection.classList.add("episodes-section");
+        episodesSection.innerHTML = `
+            <h2 class="full-row">Episodes visionnés</h2>
+            ${Array.from({ length: appState.oeuvre.number_of_episodes }, (_, i) => `
+                <button class="watched-episode-btn">
+                    <span class="watched-episode-text">Épisode ${i + 1}</span>
+                </button>
+            `).join("")}
+        `;
+        container.appendChild(episodesSection);
+
+        const episodeButtons = episodesSection.querySelectorAll(".watched-episode-btn");
+        appState.episodesWatched = Array(appState.oeuvre.number_of_episodes).fill(false);
+        episodeButtons.forEach((btn, index) => {
+            btn.addEventListener("click", () => {
+                appState.episodesWatched[index] = !appState.episodesWatched[index];
+                switchButton(
+                    btn,
+                    btn.querySelector(".watched-episode-text"),
+                    {
+                        false: `Épisode ${index + 1}`,
+                        true: `✔ Épisode ${index + 1} vu !`
+                    },
+                    appState.episodesWatched[index]
+                );
+
+                // On met à jour l’état global : si tous les épisodes sont vus → isWatched = true
+                const allWatched = appState.episodesWatched.every(Boolean);
+                if (isWatched !== allWatched) {
+                    isWatched = allWatched;
+                    switchButton(watchedBtn, watchedText, watchedState, isWatched);
+                }
+            });
+        });
+    }
+}
 
 // ===============================
 // Interactions UI (wishlist/watchlist + étoiles)
@@ -233,8 +287,7 @@ function setRating(rating) {
 }
 
 function saveRating(rating) {
-  console.log('Note enregistrée:', rating + '/5');
-  showNotification(`Note enregistrée : ${rating}/5 étoiles`);
+    showNotification(`Note enregistrée : ${rating}/5 étoiles`);
 }
 
 // Notifications
@@ -267,12 +320,9 @@ document.head.appendChild(style);
 
 // Retour watchlist
 const returnBtn = document.querySelector('.return-btn');
-if (returnBtn) {
-  returnBtn.addEventListener('click', function () {
-    showNotification('Retour à la watchlist...');
-    window.location.href = './watchlist.html';
-  });
-}
+returnBtn.addEventListener('click', function() {
+    window.location.href = 'watchlist.html'; // Décommenter pour vraie navigation
+});
 
 // Effets visuels
 const poster = document.querySelector('.poster-section img');
