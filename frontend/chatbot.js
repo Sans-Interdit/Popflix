@@ -19,15 +19,32 @@ toggleBtn.addEventListener("click", () => {
 input.addEventListener("keypress", (e) => {
   if (e.key === "Enter" && input.value.trim() !== "") {
     const userMsg = document.createElement("div");
-    userMsg.classList.add("user");
-    userMsg.textContent = "🧑 " + input.value;
+    userMsg.classList.add("message", "user");
+    userMsg.textContent = input.value;
     messages.appendChild(userMsg);
 
 
-    userMsg.classList.toggle(".bot")
-    const botMsg = document.createElement("div");
-    botMsg.textContent = "🤖 " + "Je suis un chatbot démo.";
-    setTimeout(() => messages.appendChild(botMsg), 500);
+    fetch("http://localhost:5000/chat", {
+        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        body: JSON.stringify({
+            message : input.value
+        })
+    })
+    .then(res => {
+        if (!res.ok) {
+            return Promise.reject("Échec de la requête");
+        } else {
+            return res.json()
+        }
+    })
+    .then(data => {
+        console.log(data)
+        const botMsg = document.createElement("div");
+        botMsg.classList.add("message", "bot");
+        botMsg.textContent = data.response;
+        messages.appendChild(botMsg);
+    });
 
     input.value = "";
     messages.scrollTop = messages.scrollHeight;
