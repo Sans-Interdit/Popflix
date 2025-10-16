@@ -23,13 +23,15 @@ input.addEventListener("keypress", (e) => {
     userMsg.textContent = input.value;
     messages.appendChild(userMsg);
 
-
     fetch("http://localhost:5000/chat", {
-        headers: { 'Content-Type': 'application/json' },
-        method: "POST",
-        body: JSON.stringify({
-            message : input.value
-        })
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      method: "POST",
+      body: JSON.stringify({
+          message : input.value,
+          mode : "detection"
+      })
     })
     .then(res => {
         if (!res.ok) {
@@ -39,14 +41,132 @@ input.addEventListener("keypress", (e) => {
         }
     })
     .then(data => {
-        console.log(data)
-        const botMsg = document.createElement("div");
-        botMsg.classList.add("message", "bot");
-        botMsg.textContent = data.response;
-        messages.appendChild(botMsg);
+      console.log(data)
+      if (data.response == "oui") {
+        recommendationWay(input.value)
+      }
+      else {
+        fetch("http://localhost:5000/chat", {
+          headers: { 
+              'Content-Type': 'application/json' 
+            },
+          method: "POST",
+          body: JSON.stringify({
+              message : input.value,
+              mode : "casual"
+          })
+        })
+        .then(res => {
+            if (!res.ok) {
+                return Promise.reject("Échec de la requête");
+            } else {
+                return res.json()
+            }
+        })
+        .then(data => {
+            console.log(data)
+            const botMsg = document.createElement("div");
+            botMsg.classList.add("message", "bot");
+            botMsg.textContent = data.response;
+            messages.appendChild(botMsg);
+        });
+      }
     });
 
     input.value = "";
     messages.scrollTop = messages.scrollHeight;
   }
 });
+
+
+function recommendationWay(input) {
+  const watchlistStr = localStorage.getItem("watchlist");
+  const watchlist = JSON.parse(watchlistStr);
+
+  // Extraire uniquement les titres
+  const titles = watchlist.map(item => item.title);
+
+
+  // Exemple d’envoi via fetch :
+  fetch("http://localhost:5000/recommend", {
+    headers: { 
+      'Content-Type': 'application/json' 
+    },
+    method: "POST",
+    body: JSON.stringify({ list: titles })
+  })
+  .then(res => {
+    if (!res.ok) throw new Error("Échec de la requête");
+    return res.json();
+  })
+  .then(data => {
+    fetch("http://localhost:5000/chat", {
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      method: "POST",
+      body: JSON.stringify({
+        message : input,
+        mode : "recommendation",
+        result: data
+      })
+    })
+    .then(res => {
+      if (!res.ok) {
+        return Promise.reject("Échec de la requête");
+      } else {
+        return res.json()
+      }
+    })
+    .then(data => {
+      const botMsg = document.createElement("div");
+      botMsg.classList.add("message", "bot");
+      botMsg.textContent = data.response;
+      messages.appendChild(botMsg);
+    });
+  })
+  .catch(err => console.error(err));
+}
+
+  // fetch("http://localhost:5000/recommend", {
+  //   headers: { 
+  //     'Content-Type': 'application/json' 
+  //   },
+  //   method: "POST",
+  //   body: JSON.stringify({
+  //     list : localStorage.getItem("watchlist"),
+  //   })
+  // })
+  // .then(res => {
+  //   if (!res.ok) {
+  //     return Promise.reject("Échec de la requête");
+  //   } else {
+  //     return res.json()
+  //   }
+  // })
+  // .then(data => {
+  //   data
+  //   fetch("http://localhost:5000/chat", {
+  //     headers: { 
+  //       'Content-Type': 'application/json' 
+  //     },
+  //     method: "POST",
+  //     body: JSON.stringify({
+  //       message : input.value,
+  //       mode : "recommendation"
+  //     })
+  //   })
+  //   .then(res => {
+  //     if (!res.ok) {
+  //       return Promise.reject("Échec de la requête");
+  //     } else {
+  //       return res.json()
+  //     }
+  //   })
+  //   .then(data => {
+  //     const botMsg = document.createElement("div");
+  //     botMsg.classList.add("message", "bot");
+  //     botMsg.textContent = data.response;
+  //     messages.appendChild(botMsg);
+  //   });
+  // });
