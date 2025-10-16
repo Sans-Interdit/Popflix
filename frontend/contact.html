@@ -18,6 +18,8 @@
 
   <!-- CSS principal -->
   <link rel="stylesheet" href="style.css">
+      <link rel="stylesheet" href="chatbot.css">   
+
   <script src="auth.js"></script>
 
 </head>
@@ -59,6 +61,18 @@
     <div class="formulaire-tally">
         <iframe src="https://tally.so/r/w5ykJZ"></iframe>
     </div>
+  <!-- Chatbot flottant -->
+  <div id="chatbot-container" class="chatbot-collapsed">
+    <div id="chatbot-header">
+      <span>💬 Chatbot</span>
+      <button id="chatbot-toggle" aria-label="Réduire le chatbot">–</button>
+    </div>
+    <div id="chatbot-body">
+      <div id="chatbot-messages" aria-live="polite"></div>
+      <input id="chatbot-input" type="text" placeholder="Écris ton message..." />
+    </div>
+  </div>
+  <button id="chatbot-open-btn" aria-label="Ouvrir le chatbot">💬</button>
     <footer class="site-footer">
         <p>
       <img
@@ -102,5 +116,7 @@
       }
     });
   </script>
+    <script src="chatbot.js" defer></script>
+
 </body>
 </html>

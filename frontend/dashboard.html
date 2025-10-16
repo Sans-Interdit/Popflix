@@ -6,12 +6,15 @@
   <title>POPFLIX — Tableau de bord</title>
 
   <link rel="stylesheet" href="dashboard.css">
+      <link rel="stylesheet" href="chatbot.css">   
+
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
   <!-- Scripts: auth → Chart.js → dashboard.js -->
   <script src="auth.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
   <script src="dashboard.js" defer></script>
+  <script src="chatbot.js" defer></script>
 </head>
 
 <body data-page="dashboard">
@@ -39,7 +42,18 @@
     <!-- Conteneur de rendu -->
     <div id="dashboard-root" data-auto-dashboard="1"></div>
   </main>
-
+  <!-- Chatbot flottant -->
+  <div id="chatbot-container" class="chatbot-collapsed">
+    <div id="chatbot-header">
+      <span>💬 Chatbot</span>
+      <button id="chatbot-toggle" aria-label="Réduire le chatbot">–</button>
+    </div>
+    <div id="chatbot-body">
+      <div id="chatbot-messages" aria-live="polite"></div>
+      <input id="chatbot-input" type="text" placeholder="Écris ton message..." />
+    </div>
+  </div>
+  <button id="chatbot-open-btn" aria-label="Ouvrir le chatbot">💬</button>
   <footer class="site-footer">
     <p>
       <img src="/data/images/TMDb logo.png" alt="TMDb logo" style="height: 30px; vertical-align: middle; margin-right: 8px;">
