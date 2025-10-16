@@ -451,12 +451,12 @@ select:focus-visible {
   flex-direction: column;
   align-items: center;
   transition: transform .2s ease, box-shadow .2s ease;
-  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .4);
 }
 
 .carte:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, .4);
+  box-shadow: 0 0 40px rgba(0, 255, 255, 0.9);
 }
 
 /* Ligne interne (poster + texte) */
@@ -550,8 +550,8 @@ select:focus-visible {
   gap: 30px; /* espace horizontal entre les boutons */
   justify-content: center; /* centre les boutons si tu veux */
   flex-wrap: wrap; /* permet le passage à la ligne sur mobile */
+  color: #0a1229;
 }
-
 
 /* État persistant "ajouté" */
 .is-added,
@@ -920,14 +920,128 @@ iframe[data-tally-src] {
   margin-top: -60px; /* réduit la marge haute visible */
 }
 
-.home-metrics { padding: 1rem; background: #0f0f0f; border-radius: 12px; margin: 1rem 0; }
-.metrics-cards { display: grid; grid-template-columns: repeat(4, minmax(140px, 1fr)); gap: 12px; }
-.metric { background:#161616; border:1px solid #222; padding:12px; border-radius:10px; text-align:center; }
-.metric-label { font-size: .85rem; color:#aaa; }
-.metric-value { font-size: 1.6rem; font-weight:700; }
-.metrics-charts { height: 220px; margin-top: 1rem; background:#161616; border:1px solid #222; border-radius:10px; padding:8px; }
-.types-list { margin-top: .75rem; display:grid; gap:4px; list-style:none; padding-left:0; }
-.types-list li { background:#161616; border:1px solid #222; padding:6px 10px; border-radius:8px; }
+/* =========================
+   HOME — conteneurs serrés
+   ========================= */
 
-.push-right { margin-left: auto; }
+/* mêmes codes visuels que .welcome */
+.home-metrics,
+.home-viewing {
+  max-inline-size: min(90vw, 900px);
+  margin: 24px auto;
+  background: var(--bg2);
+  border: 1px solid #1b4258;
+  border-radius: 12px;
+  padding: 24px;
 
+}
+
+/* titres un peu plus serrés */
+.home-metrics h2,
+.home-viewing h2 { margin: 0 0 10px; letter-spacing: 1.2px; }
+
+/* cartes chiffres */
+.metrics-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 12px;
+}
+.metric {
+  background: #161616;
+  border: 1px solid #222;
+  padding: 12px;
+  border-radius: 10px;
+  text-align: center;
+}
+.metric-label { font-size: .85rem; color: #aaa; }
+.metric-value { font-size: 1.6rem; font-weight: 700; }
+
+/* graphe résumé — hauteur réduite et 100% largeur dans le conteneur */
+.metrics-charts {
+  height: 200px;
+  margin-top: 12px;
+  background: #161616;
+  border: 1px solid #222;
+  border-radius: 10px;
+  padding: 8px;
+}
+.metrics-charts canvas { width: 100% !important; height: 100% !important; }
+
+/* liste top events */
+.types-list {
+  margin-top: .75rem;
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  padding-left: 0;
+}
+.types-list li {
+  background: #161616;
+  border: 1px solid #222;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+/* =========================
+   HOME — "Ce que j’ai regardé"
+   ========================= */
+
+/* bandeau chiffres films */
+.viewing-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* grille gauche/droite: table + 2 camemberts */
+.viewing-layout {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 16px;
+}
+
+/* table compacte des séries */
+.table-compact {
+  width: 100%;
+  border-collapse: collapse;
+  background: #161616;
+  border: 1px solid #222;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.table-compact th,
+.table-compact td {
+  border-bottom: 1px solid #222;
+  padding: 8px 10px;
+  text-align: left;
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+}
+.table-compact thead th {
+  background: #0f0f0f;
+  font-weight: 700;
+}
+
+/* boîtes graphiques à droite */
+.chart-box {
+  background: #161616;
+  border: 1px solid #222;
+  border-radius: 10px;
+  padding: 8px;
+  margin-bottom: 12px;
+}
+.chart-box h3 { margin: 6px 8px 8px; font-size: 16px; }
+.chart-box canvas { width: 100% !important; height: 180px !important; }
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+@media (max-width: 900px) {
+  .metrics-cards { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+  .viewing-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .viewing-cards { grid-template-columns: 1fr; }
+  .chart-box canvas { height: 160px !important; }
+}

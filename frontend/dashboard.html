@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POPFLIX — Tableau de bord</title>
+
+  <link rel="stylesheet" href="dashboard.css">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Scripts: auth → Chart.js → dashboard.js -->
+  <script src="auth.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="dashboard.js" defer></script>
+</head>
+
+<body data-page="dashboard">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">
+        <span>POPFLIX</span>
+        <img src="/data/images/logo_popflix.png" alt="Logo POPFLIX" class="logo-img">
+      </div>
+      <div class="slogan">LE POPCORN DU BINGE-WATCH</div>
+    </div>
+    <nav class="main-nav" aria-label="Menu principal">
+      <div class="nav-bottom">
+        <a class="nav-item" href="index.html">ACCUEIL</a>
+        <a class="nav-item" href="watchlist.html">WATCHLIST</a>
+        <a class="nav-item" href="wishlist.html">WISHLIST</a>
+        <a class="nav-item" href="bibliotheque.html">BIBLIOTHÈQUE</a>
+        <a class="nav-item" href="dashboard.html">DASHBOARD</a>
+        <a class="nav-item" href="compte.html">COMPTE</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Conteneur de rendu -->
+    <div id="dashboard-root" data-auto-dashboard="1"></div>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <img src="/data/images/TMDb logo.png" alt="TMDb logo" style="height: 30px; vertical-align: middle; margin-right: 8px;">
+      Ce produit utilise l’API de The Movie Database (TMDb), mais n’est ni approuvé ni certifié par TMDb.
+    </p>
+    <div class="footer-content">
+      <p class="footer-text">© 2025 <strong>POPFLIX</strong> — Tous droits réservés</p>
+    </div>
+  </footer>
+</body>
+</html>

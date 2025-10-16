@@ -1,5 +1,5 @@
 // ===============================
-// POPFLIX — carte.js (fusion: watchlist/wishlist + épisodes + merge sûr)
+// POPFLIX — carte.js (watchlist / wishlist + épisodes)
 // ===============================
 
 // ----- Étoiles / états boutons -----
@@ -15,14 +15,13 @@ const watchedText = watchedBtn ? watchedBtn.querySelector(".watched-text") : nul
 let isWatched = false;
 
 const wishedState  = { false: "Ajouter à la wishlist", true: "☑ Dans votre wishlist" };
-const wishedState  = { false: "Ajouter à la wishlist", true: "☑ Dans votre wishlist" };
 const watchedState = { false: "J'ai vu cette œuvre",   true: "☑ Œuvre regardée !" };
 
 const appState = {
-  oeuvre: null,          // { id, type, title, release_date, genres, overview, director, actors, poster, number_of_episodes }
-  episodesWatched: []    // [bool] pour séries
-  oeuvre: null,          // { id, type, title, release_date, genres, overview, director, actors, poster, number_of_episodes }
-  episodesWatched: []    // [bool] pour séries
+  // { id, type, title, release_date, genres, overview, director, actors, poster, number_of_episodes }
+  oeuvre: null,
+  // [bool] pour séries
+  episodesWatched: []
 };
 
 // ----- Helpers DOM -----
@@ -37,10 +36,7 @@ function renderOeuvre(o) {
   setText('[data-field="title"]',        o.title || "");
   setText('[data-field="release_date"]', o.release_date || "");
   setText('[data-field="genres"]',       o.genres || "");
-  // Overview = synopsis long prioritaire / fallback synopsis / overview API
   setText('[data-field="overview"]',     o.overview || o.synopsis_long || o.synopsis || "");
-  // Champs enrichis
-  // Champs enrichis
   setText('[data-field="director"]',     o.director || "");
   setText('[data-field="actors"]',       o.actors || "");
 }
@@ -80,15 +76,12 @@ async function fetchTmdbPoster({ title, type, release_date }) {
 // ----- Mapping util -----
 function mapToOeuvre(src) {
   if (!src) return null;
-  console.log(src.number_of_episodes)
   return {
-    // accepte clés côté front (items) ET côté API
     id: src.id,
     type: src.type, // "Film" | "Série"
     title: src.title,
     release_date: src.year || src.release_date || "",
     genres: src.genre || src.genres || "",
-    // Priorité aux contenus enrichis
     overview: src.synopsis_long || src.synopsis || src.overview || "",
     synopsis_long: src.synopsis_long || "",
     synopsis_short: src.synopsis_short || "",
@@ -96,100 +89,9 @@ function mapToOeuvre(src) {
     actors: src.actors || "",
     poster: src.poster || "",
     number_of_episodes: src.number_of_episodes || 0
-    poster: src.poster || "",
-    number_of_episodes: src.number_of_episodes || 0
   };
 }
 
-// Merge qui évite d’écraser par des valeurs vides
-function mergeNonEmpty(base, incoming) {
-  const clean = Object.fromEntries(
-    Object.entries(incoming || {}).filter(([, v]) => v !== undefined && v !== null && v !== "")
-  );
-  return { ...base, ...clean };
-}
-
-// ======= LocalStorage helpers =======
-function readList(key){ try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; } }
-function writeList(key, arr){ try { localStorage.setItem(key, JSON.stringify(arr)); } catch {} }
-function normKey(s){
-  try {
-    return (s || '')
-      .toString()
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim();
-  } catch {
-    return (s || '').toString().toLowerCase().trim();
-  }
-}
-
-// Construit un item watchlist depuis l'écran
-function buildWatchlistItem(defaultState = "not_started") {
-  const o = appState.oeuvre || {};
-  const posterEl = document.getElementById('poster');
-  const posterSrc = posterEl?.getAttribute('src') || o.poster || "";
-  const isSerie = (o.type || "").toLowerCase().startsWith('s');
-  return {
-    id: o.id || undefined,
-    title: o.title || "",
-    image: posterSrc,
-    poster: posterSrc, // compat
-    type: isSerie ? 'serie' : 'film',
-    year: o.release_date || "",
-    genre: o.genres || "",
-    synopsis: o.overview || "",
-    synopsis_short: o.synopsis_short || "",
-    director: o.director || "",
-    actors: o.actors || "",
-    state: defaultState // "not_started" | "done"
-  };
-}
-
-// Upsert dans une liste (watchlist/wishlist) en forçant un state
-function upsertWithState(listName, item, forcedState){
-  const list = readList(listName);
-  const byIdIndex = item.id ? list.findIndex(i => i.id === item.id) : -1;
-  const titleIndex = byIdIndex === -1 ? list.findIndex(i => normKey(i.title) === normKey(item.title)) : -1;
-
-  const base = { ...item, state: forcedState };
-  if (byIdIndex >= 0) {
-    list[byIdIndex] = { ...list[byIdIndex], ...base };
-  } else if (titleIndex >= 0) {
-    list[titleIndex] = { ...list[titleIndex], ...base };
-  } else {
-    list.push(base);
-  }
-  writeList(listName, list);
-}
-
-// ======= Persistance d'état (boutons + étoiles) =======
-function stateStorageKey(){
-  const o = appState.oeuvre || {};
-  const type = (o.type || 'unknown').toLowerCase();
-  return o.id ? `mediaState:${type}:${o.id}` : 'mediaState:global';
-}
-
-function loadUIState(){
-  try {
-    const raw = localStorage.getItem(stateStorageKey());
-    if (!raw) return;
-    const s = JSON.parse(raw);
-    if (typeof s.isWatched !== 'undefined') isWatched = !!s.isWatched;
-    if (typeof s.isWished  !== 'undefined') isWished  = !!s.isWished;
-    if (typeof s.currentRating !== 'undefined') currentRating = Number(s.currentRating) || 0;
-  } catch {}
-}
-
-function saveUIState(){
-  try {
-    const payload = { isWatched, isWished, currentRating };
-    localStorage.setItem(stateStorageKey(), JSON.stringify(payload));
-  } catch {}
-}
-
-// ----- Bootstrap -----
 // Merge qui évite d’écraser par des valeurs vides
 function mergeNonEmpty(base, incoming) {
   const clean = Object.fromEntries(
@@ -284,7 +186,6 @@ document.addEventListener('DOMContentLoaded', async function () {
   const id = qs.get("id");
 
   // 1) Afficher immédiatement depuis sessionStorage
-  // 1) Afficher immédiatement depuis sessionStorage
   let selected = null;
   try {
     const saved = sessionStorage.getItem('popflix:selected');
@@ -305,7 +206,6 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 
   // 2) Optionnel: API back (si dispo)
-  // 2) Optionnel: API back (si dispo)
   let apiOeuvre = null;
   if (id) {
     const urlBack = "http://127.0.0.1:5000/get_event?id=" + encodeURIComponent(id);
@@ -313,7 +213,6 @@ document.addEventListener('DOMContentLoaded', async function () {
       const r = await fetch(urlBack, { headers: { 'Content-Type': 'application/json' } });
       if (r.ok) {
         const json = await r.json();
-        console.log("fdsfdsfsd",json)
         apiOeuvre = mapToOeuvre(json);
       }
     } catch (e) {
@@ -321,71 +220,70 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
   }
 
-    // 3) Si l’API répond, on écrase/complète et on rerender
-    if (apiOeuvre) {
-        appState.oeuvre = {
-            ...appState.oeuvre,
-            ...Object.fromEntries(
-            Object.entries(apiOeuvre).filter(([_, v]) => v !== undefined && v !== null && v !== "")
-            )
-        };
-        renderOeuvre(appState.oeuvre);
-        console.log(apiOeuvre.poster)
-        if (apiOeuvre.poster && apiOeuvre.poster != "nan") setPoster(apiOeuvre.poster);
-    }
+  // 3) Si l’API répond, on complète et on rerender
+  if (apiOeuvre) {
+    appState.oeuvre = mergeNonEmpty(appState.oeuvre || {}, apiOeuvre);
+    renderOeuvre(appState.oeuvre);
+    if (apiOeuvre.poster && apiOeuvre.poster !== "nan") setPoster(apiOeuvre.poster);
+  }
 
-  // 4) Améliorer l’affiche via TMDb (si placeholder)
   // 4) Améliorer l’affiche via TMDb (si placeholder)
   const posterEl = document.querySelector('#poster');
   if (!posterEl?.src || posterEl.src.endsWith("placeholder_poster.png")) {
     const tmdbUrl = await fetchTmdbPoster(appState.oeuvre || {});
     if (tmdbUrl) setPoster(tmdbUrl);
   }
-  
+
+  // Épisodes (si série)
   addEpisodes();
-  console.log(appState.oeuvre)
+
+  // Charger état UI persistant
+  loadUIState();
+  switchButton(wishedBtn, wishedText, wishedState, isWished);
+  switchButton(watchedBtn, watchedText, watchedState, isWatched);
+  setRating(currentRating);
 });
 
 function addEpisodes() {
-    console.log(appState.oeuvre.number_of_episodes)
-    const container = document.querySelector(".movie-container");
-    if (appState.oeuvre.type === "Série" && appState.oeuvre.number_of_episodes > 0) {
-        const episodesSection = document.createElement("div");
-        episodesSection.classList.add("episodes-section");
-        episodesSection.innerHTML = `
-            <h2 class="full-row">Episodes visionnés</h2>
-            ${Array.from({ length: appState.oeuvre.number_of_episodes }, (_, i) => `
-                <button class="watched-episode-btn">
-                    <span class="watched-episode-text">Épisode ${i + 1}</span>
-                </button>
-            `).join("")}
-        `;
-        container.appendChild(episodesSection);
+  const container = document.querySelector(".movie-container");
+  if (!container || !appState.oeuvre) return;
 
-        const episodeButtons = episodesSection.querySelectorAll(".watched-episode-btn");
-        appState.episodesWatched = Array(appState.oeuvre.number_of_episodes).fill(false);
-        episodeButtons.forEach((btn, index) => {
-            btn.addEventListener("click", () => {
-                appState.episodesWatched[index] = !appState.episodesWatched[index];
-                switchButton(
-                    btn,
-                    btn.querySelector(".watched-episode-text"),
-                    {
-                        false: `Épisode ${index + 1}`,
-                        true: `✔ Épisode ${index + 1} vu !`
-                    },
-                    appState.episodesWatched[index]
-                );
+  const isSerie = (appState.oeuvre.type || "").toLowerCase().startsWith("s");
+  const nb = Number(appState.oeuvre.number_of_episodes) || 0;
 
-                // On met à jour l’état global : si tous les épisodes sont vus → isWatched = true
-                const allWatched = appState.episodesWatched.every(Boolean);
-                if (isWatched !== allWatched) {
-                    isWatched = allWatched;
-                    switchButton(watchedBtn, watchedText, watchedState, isWatched);
-                }
-            });
-        });
-    }
+  if (isSerie && nb > 0) {
+    const episodesSection = document.createElement("div");
+    episodesSection.classList.add("episodes-section");
+    episodesSection.innerHTML = `
+      <h2 class="full-row">Episodes visionnés</h2>
+      ${Array.from({ length: nb }, (_, i) => `
+        <button class="watched-episode-btn">
+          <span class="watched-episode-text">Épisode ${i + 1}</span>
+        </button>
+      `).join("")}
+    `;
+    container.appendChild(episodesSection);
+
+    const episodeButtons = episodesSection.querySelectorAll(".watched-episode-btn");
+    appState.episodesWatched = Array(nb).fill(false);
+    episodeButtons.forEach((btn, index) => {
+      btn.addEventListener("click", () => {
+        appState.episodesWatched[index] = !appState.episodesWatched[index];
+        switchButton(
+          btn,
+          btn.querySelector(".watched-episode-text"),
+          { false: `Épisode ${index + 1}`, true: `✔ Épisode ${index + 1} vu !` },
+          appState.episodesWatched[index]
+        );
+        // si tous vus → isWatched = true
+        const allWatched = appState.episodesWatched.every(Boolean);
+        if (isWatched !== allWatched) {
+          isWatched = allWatched;
+          switchButton(watchedBtn, watchedText, watchedState, isWatched);
+        }
+      });
+    });
+  }
 }
 
 // ===============================
@@ -396,15 +294,8 @@ if (wishedBtn && wishedText) {
     isWished = !isWished;
     switchButton(wishedBtn, wishedText, wishedState, isWished);
 
-    // tenir la wishlist en phase (état logique: on reste sur not_started si “souhaité”)
-    const item = buildWatchlistItem(isWished ? "not_started" : "not_started");
-    upsertWithState("wishlist", item, isWished ? "not_started" : "not_started");
-
-    saveUIState();
-
-    // tenir la wishlist en phase (état logique: on reste sur not_started si “souhaité”)
-    const item = buildWatchlistItem(isWished ? "not_started" : "not_started");
-    upsertWithState("wishlist", item, isWished ? "not_started" : "not_started");
+    const item = buildWatchlistItem("not_started");
+    upsertWithState("wishlist", item, "not_started");
 
     saveUIState();
   });
@@ -413,8 +304,6 @@ if (wishedBtn && wishedText) {
 if (watchedBtn && watchedText) {
   watchedBtn.addEventListener("click", () => {
     isWatched = !isWatched;
-
-    // synchroniser tous les épisodes avec l’état global
 
     // synchroniser tous les épisodes avec l’état global
     appState.episodesWatched = appState.episodesWatched.map(() => isWatched);
@@ -429,20 +318,6 @@ if (watchedBtn && watchedText) {
     });
 
     switchButton(watchedBtn, watchedText, watchedState, isWatched);
-
-    // mettre à jour les listes
-    if (isWatched) {
-      const item = buildWatchlistItem("done");
-      upsertWithState("watchlist", item, "done");
-      upsertWithState("wishlist",  item, "done");
-      showNotification("Ajouté/mis à jour : watchlist (terminé).");
-    } else {
-      const item = buildWatchlistItem("not_started");
-      upsertWithState("watchlist", item, "not_started");
-      showNotification("Statut repassé à « pas commencé ».");
-    }
-
-    saveUIState();
 
     // mettre à jour les listes
     if (isWatched) {
@@ -543,16 +418,16 @@ function showNotification(message) {
 
 // Ajout style pour étoiles
 const style = document.createElement('style');
-style.textContent = `
-  .star { cursor: pointer; user-select: none; transition: all 0.2s ease; }
-`;
+style.textContent = `.star { cursor: pointer; user-select: none; transition: all 0.2s ease; }`;
 document.head.appendChild(style);
 
 // Retour watchlist (sécurisé)
 const returnBtn = document.querySelector('.return-btn');
-returnBtn.addEventListener('click', function() {
-    window.location.href = 'watchlist.html'; // Décommenter pour vraie navigation
-});
+if (returnBtn) {
+  returnBtn.addEventListener('click', function() {
+    window.location.href = 'watchlist.html';
+  });
+}
 
 // Effets visuels
 const poster = document.querySelector('.poster-section img');

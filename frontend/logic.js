@@ -9,7 +9,9 @@ const TMDB_KEY  = "186e91ca5cf68f37adff53da8ea51136"; // ⚠️ mettre côté ba
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const TMDB_IMG  = "https://image.tmdb.org/t/p/w500";
 const PLACEHOLDER = "data/images/placeholder_poster.png";
-const API_BASE = "http://127.0.0.1:5000";
+
+// ⚠️ partage propre avec auth.js (pas de re-déclaration const)
+if (!window.API_BASE) window.API_BASE = window.location.origin;
 
 /* =========================
    1) ÉTAT GLOBAL EN MÉMOIRE
@@ -110,7 +112,6 @@ function mapRow(row, counters) {
     // synopses
     synopsis_long: (row.synopsis_long || row.synopsis || "").toString().trim(),
     synopsis_short: (row.synopsis_short || "").toString().trim(),
-    // on garde une clé "synopsis" pour compat descendante
     synopsis: (row.synopsis || row.synopsis_long || "").toString().trim(),
 
     // crédits
@@ -118,8 +119,6 @@ function mapRow(row, counters) {
     actors: (row.actors || "").toString().trim(),
 
     number_of_episodes: parseEpisodes(row.number_of_episodes),
-
-    // défaut : not_started (pas commencés)
     state: ((row.state || "").toString().trim() || "not_started"),
   };
 }
@@ -142,14 +141,8 @@ function getItemGenres(it) {
 function cleanPoster(url) {
   let u = (url || "").toString().trim();
   if (!u) return PLACEHOLDER;
-
-  // si c'est un asset local (ex: /data/...): on ne préfixe pas
   if (u.startsWith("/data/")) return u;
-
-  // si c'est un chemin tmdb relatif (ex: /abcd.jpg), on préfixe
   if (u.startsWith("/") && !u.startsWith("//")) return TMDB_IMG + u;
-
-  // sinon on normalise juste le protocole
   return u.replace(/^http:\/\//i, "https://").replace(/\s+/g, " ");
 }
 
@@ -161,7 +154,6 @@ function toCardHTML(item) {
   const type     = isSerie ? 'serie' : 'film';
   const year     = item.year || "";
   const genre    = (item.genre || "").toString().trim();
-
   const synopsisShort = (item.synopsis_short || item.synopsis_long || item.synopsis || "").toString().trim();
 
   return `
@@ -188,7 +180,6 @@ function toCardHTML(item) {
         </div>
       </div>
 
-      <!-- Boutons d’action -->
       <div class="boutons">
         <button type="button" class="btn btn-watchlist">Ajouter à ma watchlist</button>
         <button type="button" class="btn btn-wishlist">Ajouter à ma wishlist</button>
@@ -235,7 +226,6 @@ function mergeLocalStates(list){
   });
 }
 
-// Merge CSV + listes locales (pour afficher aussi les items ajoutés par l’utilisateur)
 function mergeWithLocalLists(csvItems) {
   const wishlist  = readList('wishlist');
   const watchlist = readList('watchlist');
@@ -289,30 +279,25 @@ function applyFilters() {
   const q = norm(filterState.query);
 
   const filtered = (items || []).filter(it => {
-    // TYPE
     if (filterState.type) {
-      const t = norm(it.type); // "film" / "série"
+      const t = norm(it.type);
       const wantSeries = filterState.type === "series";
       if (wantSeries && t !== "série" && t !== "serie") return false;
       if (!wantSeries && filterState.type === "films" && t !== "film") return false;
     }
-    // STATUT
     if (filterState.statut) {
       if (norm(it.state) !== norm(filterState.statut)) return false;
     }
-    // GENRE
     if (filterState.genres.size) {
       const g = [...filterState.genres][0];
       const itemGenres = getItemGenres(it);
       if (!itemGenres.includes(g)) return false;
     }
-    // RECHERCHE
     if (q) {
       const hay = [it.title, it.genre, it.director, it.actors, it.synopsis_long, it.synopsis_short]
         .map(x => norm(x)).join(" ");
       if (!hay.includes(q)) return false;
     }
-
     return true;
   });
 
@@ -373,7 +358,6 @@ function onCatalogClick(e) {
       type: (it.type || '').toLowerCase().startsWith('s') ? 'serie' : 'film',
       year: it.year || '',
       genre: it.genre || '',
-      // synopsis: privilégier la version longue si dispo
       synopsis: it.synopsis_long || it.synopsis || '',
       synopsis_short: it.synopsis_short || '',
       director: it.director || '',
@@ -416,7 +400,7 @@ function onCatalogClick(e) {
       genre: it.genre,
       synopsis_long: it.synopsis_long || it.synopsis || "",
       synopsis_short: it.synopsis_short || "",
-      synopsis: it.synopsis || "", // compat
+      synopsis: it.synopsis || "",
       director: it.director || "",
       actors: it.actors || "",
       poster: cleanPoster(it.poster) || PLACEHOLDER
@@ -448,7 +432,6 @@ function populateGenreSelect(){
 }
 
 function initFilters() {
-  // TYPE
   const typeSel = document.getElementById("type-select");
   if (typeSel) {
     typeSel.addEventListener("change", () => {
@@ -457,7 +440,6 @@ function initFilters() {
     });
   }
 
-  // STATUT
   const stSel = document.getElementById("statut-select");
   if (stSel) {
     stSel.addEventListener("change", () => {
@@ -466,10 +448,8 @@ function initFilters() {
     });
   }
 
-  // GENRE
   populateGenreSelect();
 
-  // TITRE (input avec léger debounce)
   const input = document.getElementById("q");
   if (input) {
     let t;
@@ -482,7 +462,6 @@ function initFilters() {
     });
   }
 
-  // RESET
   const clearBtn = document.getElementById("filters-clear");
   if (clearBtn) {
     clearBtn.addEventListener("click", () => {
@@ -548,14 +527,10 @@ async function loadCSVAndBoot() {
 
     items = merged;
 
-    // 2) Affiche vite avec placeholders
     renderCards(items.map(it => ({ ...it, poster: PLACEHOLDER })));
-
-    // 3) Hydrate posters TMDb puis rend + filtre
     await hydratePosters(items);
     applyFilters();
 
-    // 4) Câblage des filtres
     initFilters();
   } catch (e) {
     console.error("Erreur de chargement CSV :", e);
@@ -573,6 +548,12 @@ document.addEventListener("DOMContentLoaded", () => {
   if (document.body?.dataset?.page === 'bibliotheque') {
     loadCSVAndBoot();
   }
+
+  // 🔁 Backfill "vu" depuis les listes locales (une seule fois)
+  // attend que auth.js ait exposé markAsWatched
+  setTimeout(() => { 
+    if (typeof window.markAsWatched === 'function') backfillWatchedOnce();
+  }, 500);
 });
 
 /* =========================================================
@@ -598,11 +579,55 @@ async function hydratePosters(list, concurrency = 6) {
       it.poster = posterUrl;
       cacheSet(key, posterUrl);
 
-      // Petit throttle pour TMDb
       await new Promise(r => setTimeout(r, 120));
     }
   }
 
   for (let i = 0; i < concurrency; i++) workers.push(worker());
   await Promise.all(workers);
+}
+
+/* =========================================================
+   14) BACKFILL des éléments déjà "vus" (localStorage -> /events)
+   ========================================================= */
+async function backfillWatchedOnce() {
+  const KEY = 'popflix_synced_events_v1';
+  const synced = new Set(JSON.parse(localStorage.getItem(KEY) || '[]'));
+  const saveSynced = () => localStorage.setItem(KEY, JSON.stringify([...synced]));
+
+  const names = ['watchlist','wishlist'];
+  let changed = false;
+
+  for (const name of names) {
+    let list = [];
+    try { list = JSON.parse(localStorage.getItem(name) || '[]'); } catch { list = []; }
+    for (const it of list) {
+      const done = (it.state === 'done') || it.watched === true || it.status === 'done';
+      if (!done) continue;
+
+      // Films
+      if ((it.type === 'film') || (it.type === 'movie') || (it.type || '').toLowerCase() === 'film') {
+        const key = `m:${it.title}`;
+        if (synced.has(key)) continue;
+        await window.markAsWatched({ type: 'movie', title: it.title || '', genre: it.genre || '' });
+        synced.add(key); changed = true;
+      }
+
+      // Épisodes
+      if (it.type === 'episode' || it.kind === 'episode') {
+        const key = `e:${it.series_title}:${it.season}:${it.episode}`;
+        if (synced.has(key)) continue;
+        await window.markAsWatched({
+          type: 'episode',
+          series_title: it.series_title || '',
+          season: Number(it.season || 0),
+          episode: Number(it.episode || 0),
+          genre: it.genre || ''
+        });
+        synced.add(key); changed = true;
+      }
+    }
+  }
+
+  if (changed) saveSynced();
 }

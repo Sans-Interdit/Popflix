@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, make_response
 from flask import send_from_directory
 import csv
 from flask_cors import CORS
-import os, sqlite3, json, uuid
+import os, sqlite3, json, uuid, re
 from datetime import datetime, timedelta
 import jwt
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -295,71 +295,107 @@ def get_event():
         print(e)
         return jsonify({'error': str(e)}), 500
 
-# ------------------- Metrics / Analytics (read-only) -------------------
-@app.get("/metrics/summary")
-def metrics_summary():
+# ------------------- Metrics: viewing (uniques uniquement) -------------------
+@app.get("/metrics/viewing")
+def metrics_viewing():
     """
-    Résumé chiffré pour la page d'accueil.
-    Renvoie:
-    - total_users
-    - events_total
-    - events_today
-    - active_users_7d (users distincts ayant fait au moins 1 event sur 7 jours)
-    - events_by_type (top 10)
-    - events_by_day (les 7 derniers jours)
+    Agrège les events 'episode_watched' et 'movie_watched' pour calculer :
+    - nb de films vus (uniques)
+    - nb de séries vues (uniques)
+    - nb total d'épisodes vus
+    - répartition par genre (films / séries séparés)
+    - répartition par type (film vs série)
     """
+    from collections import defaultdict
+    import re, json as _json
+
+    # Compteurs / agrégats
+    series_episodes = defaultdict(int)  # title -> nb épisodes
+    series_titles = set()               # séries vues (uniques)
+    episodes_total = 0
+
+    movies_titles = set()               # films vus (uniques)
+
+    genre_movies = defaultdict(int)
+    genre_series = defaultdict(int)
+
+    type_counts = defaultdict(int)      # 'film' | 'série' -> nb de titres uniques
+
+    def split_genres(val: str):
+        if not val:
+            return []
+        parts = [p.strip() for p in re.split(r"[|,;/]", str(val)) if p.strip()]
+        return parts[:6]
+
     with db() as con:
-        # Total users
-        total_users = con.execute("SELECT COUNT(*) FROM users;").fetchone()[0]
+        rows = con.execute("""
+            SELECT event_type, event_payload
+            FROM events
+            WHERE event_type IN ('episode_watched','movie_watched')
+        """).fetchall()
 
-        # Total events
-        events_total = con.execute("SELECT COUNT(*) FROM events;").fetchone()[0]
+        for r in rows:
+            et = r["event_type"]
+            try:
+                payload = _json.loads(r["event_payload"] or "{}")
+            except Exception:
+                payload = {}
 
-        # Events aujourd'hui (UTC selon CURRENT_TIMESTAMP de SQLite)
-        events_today = con.execute("""
-            SELECT COUNT(*) FROM events
-            WHERE date(created_at) = date('now')
-        """).fetchone()[0]
+            if et == "episode_watched":
+                title = (payload.get("series_title") or payload.get("title") or "").strip()
+                if title:
+                    series_episodes[title] += 1
+                    series_titles.add(title)
+                episodes_total += 1
+                for g in split_genres(payload.get("genre") or payload.get("genres")):
+                    genre_series[g] += 1
 
-        # Users actifs 7j (ignorer user_id NULL)
-        active_users_7d = con.execute("""
-            SELECT COUNT(DISTINCT user_id) FROM events
-            WHERE user_id IS NOT NULL
-              AND created_at >= datetime('now','-7 days')
-        """).fetchone()[0]
+            elif et == "movie_watched":
+                title = (payload.get("title") or "").strip()
+                if title:
+                    movies_titles.add(title)
+                for g in split_genres(payload.get("genre") or payload.get("genres")):
+                    genre_movies[g] += 1
 
-        # Répartition par type d'event
-        events_by_type = [
-            {"event_type": r[0], "count": r[1]}
-            for r in con.execute("""
-                SELECT event_type, COUNT(*) as n
-                FROM events
-                GROUP BY event_type
-                ORDER BY n DESC
-                LIMIT 10
-            """).fetchall()
-        ]
+    # Séries triées par nb d’épisodes
+    series_list = [{"title": t, "episodes": n} for t, n in series_episodes.items()]
+    series_list.sort(key=lambda x: x["episodes"], reverse=True)
 
-        # Série par jour (7 derniers jours, incluant le jour courant si présent)
-        events_by_day = [
-            {"date": r[0], "count": r[1]}
-            for r in con.execute("""
-                SELECT strftime('%Y-%m-%d', created_at) AS d, COUNT(*) AS n
-                FROM events
-                WHERE created_at >= date('now','-6 days')
-                GROUP BY d
-                ORDER BY d
-            """).fetchall()
-        ]
+    # Pies genres (films / séries)
+    total_g_movies = sum(genre_movies.values()) or 1
+    by_genre_movies = [
+        {"genre": g, "count": c, "share": round(c / total_g_movies, 4)}
+        for g, c in sorted(genre_movies.items(), key=lambda kv: kv[1], reverse=True)
+    ]
+
+    total_g_series = sum(genre_series.values()) or 1
+    by_genre_series = [
+        {"genre": g, "count": c, "share": round(c / total_g_series, 4)}
+        for g, c in sorted(genre_series.items(), key=lambda kv: kv[1], reverse=True)
+    ]
+
+    # Répartition par type (uniques)
+    total_uniques = len(movies_titles) + len(series_titles) or 1
+    by_type = [
+        {"type": "film",  "count": len(movies_titles),  "share": round(len(movies_titles) / total_uniques, 4)},
+        {"type": "série", "count": len(series_titles), "share": round(len(series_titles) / total_uniques, 4)},
+    ]
+
+    # Compteurs principaux
+    counts = {
+        "movies": len(movies_titles),     # nb de films uniques vus
+        "series": len(series_titles),     # nb de séries uniques vues
+        "series_episodes": episodes_total # nb total d'épisodes vus (tous confondus)
+    }
 
     return jsonify({
-        "total_users": total_users,
-        "events_total": events_total,
-        "events_today": events_today,
-        "active_users_7d": active_users_7d,
-        "events_by_type": events_by_type,
-        "events_by_day": events_by_day
+        "counts": counts,
+        "series": series_list,
+        "by_genre_movies": by_genre_movies,
+        "by_genre_series": by_genre_series,
+        "by_type": by_type
     })
+
 
 # ------------------- Run -------------------
 if __name__ == "__main__":

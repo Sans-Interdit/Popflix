@@ -1,107 +1,39 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <!-- =========================================================
-       0) MÉTA + ASSETS GLOBAUX
-       ========================================================= -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>POPFLIX — Toute la bibliothèque</title>
+  <title>POPFLIX — Accueil</title>
 
-  <!-- Fonts (avec preconnect) -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
-  <!-- CSS principal -->
-  <link rel="stylesheet" href="style.css">
-  <!-- CSS chatbot (ajout collègue) -->
-  <link rel="stylesheet" href="chatbot.css">
+  <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="dashboard.css">  
+    <link rel="stylesheet" href="chatbot.css">   
 
-  <!-- Librairies + logique applicative -->
+  <!-- Librairies / scripts applicatifs -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" defer></script>
-  <script src="/frontend/logic.js" defer></script>
 
-  <!-- Auth & analytics (vos ajouts) -->
-  <script src="auth.js"></script>
+  <!-- ⚠️ Ordre important -->
+  <script src="auth.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="logic.js" defer></script>
+  <script src="dashboard.js" defer></script>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      logEvent('page_view', { page: location.pathname }); // si connecté, ça s’enregistre
+      if (typeof logEvent === 'function') {
+        logEvent('page_view', { page: location.pathname });
+      }
     });
-  </script>
-
-  <!-- Chart.js pour la courbe (vos ajouts) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- Récup métriques + rendu chart (vos ajouts) -->
-  <script>
-    (async function(){
-      const API = window.location.origin;
-
-      function setText(id, val) {
-        const el = document.getElementById(id);
-        if (el) el.textContent = val;
-      }
-
-      try {
-        const res = await fetch(`${API}/metrics/summary`, { cache: "no-store" });
-        if (!res.ok) throw new Error("metrics/summary KO");
-        const m = await res.json();
-
-        // Compteurs
-        setText('m-users', m.total_users ?? 0);
-        setText('m-events', m.events_total ?? 0);
-        setText('m-today', m.events_today ?? 0);
-        setText('m-active7', m.active_users_7d ?? 0);
-
-        // Top events (liste)
-        const ul = document.getElementById('m-types');
-        if (ul) {
-          ul.innerHTML = (m.events_by_type || []).map(t =>
-            `<li><strong>${t.event_type}</strong> — ${t.count}</li>`
-          ).join('') || '<li>Aucune donnée pour le moment</li>';
-        }
-
-        // Courbe 7 derniers jours
-        const ctx = document.getElementById('chart-events-7d');
-        if (ctx && Array.isArray(m.events_by_day)) {
-          const byDay = m.events_by_day;
-          const labels = byDay.map(d => d.date);
-          const data = byDay.map(d => d.count);
-
-          new Chart(ctx, {
-            type: 'line',
-            data: {
-              labels,
-              datasets: [{
-                label: 'Événements par jour (7 derniers jours)',
-                data
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                y: { beginAtZero: true, ticks: { precision: 0 } }
-              },
-              plugins: {
-                legend: { display: false }
-              }
-            }
-          });
-        }
-      } catch (e) {
-        console.warn(e);
-      }
-    })();
   </script>
 </head>
 
 <body data-page="accueil">
-
-  <!-- =========================================================
-       2) EN-TÊTE (Top bar + Navigation)
-       ========================================================= -->
   <header class="topbar">
     <div class="brand">
       <div class="logo">
@@ -129,35 +61,19 @@
     </nav>
   </header>
 
-  <!-- Contenu principal -->
   <main>
     <section class="welcome">
       <h1>Bienvenue sur <strong>POPFLIX</strong></h1>
       <p>Découvrez, gérez et partagez vos séries et films favoris.</p>
     </section>
 
-    <!-- Statistiques d’usage (vos ajouts) -->
-    <section class="home-metrics">
-      <h2>Statistiques d’usage</h2>
-      <div class="metrics-cards">
-        <div class="metric"><div class="metric-label">Utilisateurs</div><div id="m-users" class="metric-value">—</div></div>
-        <div class="metric"><div class="metric-label">Événements (total)</div><div id="m-events" class="metric-value">—</div></div>
-        <div class="metric"><div class="metric-label">Aujourd’hui</div><div id="m-today" class="metric-value">—</div></div>
-        <div class="metric"><div class="metric-label">Actifs (7 jours)</div><div id="m-active7" class="metric-value">—</div></div>
-      </div>
-
-      <div class="metrics-charts">
-        <canvas id="chart-events-7d" height="120"></canvas>
-      </div>
-
-      <div class="metrics-types">
-        <h3>Top événements</h3>
-        <ul id="m-types" class="types-list"></ul>
-      </div>
+    <!-- ⬇️ Dashboard intégré à la home -->
+    <section>
+      <div id="dashboard-root" data-auto-dashboard="1"></div>
     </section>
   </main>
 
-  <!-- Chatbot flottant (ajout collègue) -->
+  <!-- Chatbot flottant -->
   <div id="chatbot-container" class="chatbot-collapsed">
     <div id="chatbot-header">
       <span>💬 Chatbot</span>
@@ -168,7 +84,6 @@
       <input id="chatbot-input" type="text" placeholder="Écris ton message..." />
     </div>
   </div>
-  <!-- Bouton flottant pour ouvrir/fermer le chatbot -->
   <button id="chatbot-open-btn" aria-label="Ouvrir le chatbot">💬</button>
 
   <footer class="site-footer">
@@ -217,7 +132,6 @@
     });
   </script>
 
-  <!-- Chatbot JS (ajout collègue) -->
   <script src="chatbot.js" defer></script>
 </body>
 </html>
