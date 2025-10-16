@@ -11,6 +11,9 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer, util
 import re
 import unidecode
+import dotenv
+
+dotenv.load_dotenv()
 
 # ------------------- Config -------------------
 APP_NAME = "Popflix"
@@ -256,7 +259,7 @@ def log_event():
 
 # ------------------- Endpoint catalogue -------------------
 
-chatbot_key = "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"
+chatbot_key = os.getenv("KEY")
 
 client = OpenAI(
   base_url="https://openrouter.ai/api/v1",
